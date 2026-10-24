@@ -39,15 +39,15 @@ internal sealed class SettingsWindow : Window
         ApiKey = new TextBox { MinWidth = 420, PasswordChar = '•' };
         ShowKey = new CheckBox { Content = "Show", Margin = new Thickness(8, 0, 0, 0) };
         ShowKey.IsCheckedChanged += (_, _) => ApiKey.PasswordChar = ShowKey.IsChecked == true ? '\0' : '•';
-        var getKey = Ui.Btn("Get a key", icon: "Key", hue: "Madder", onClick: () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
+        var getKey = Ui.Btn("Get a key", icon: "Key", hue: "Pink", onClick: () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
         ToolTip.SetTip(getKey, "Opens the provider's page where you can create an API key.");
         KeyInfo = Ui.Hint("");
         Model = new TextBox { MinWidth = 420 };
         ModelList = new ComboBox { MinWidth = 280, PlaceholderText = "Pick from available models", Margin = new Thickness(0, 0, 8, 6) };
         ModelList.SelectionChanged += (_, _) => { if (ModelList.SelectedItem is string m) Model.Text = m; };
-        var refresh = Ui.Btn("Refresh list", RefreshModelsAsync, icon: "ArrowSync", hue: "Plum");
+        var refresh = Ui.Btn("Refresh list", RefreshModelsAsync, icon: "ArrowSync", hue: "Violet");
         ToolTip.SetTip(refresh, "Load the models this provider offers for your key.");
-        var test = Ui.Btn("Test connection", TestAsync, icon: "PlugConnected", hue: "Leaf");
+        var test = Ui.Btn("Test connection", TestAsync, icon: "PlugConnected", hue: "Green");
         ToolTip.SetTip(test, "Send a tiny request with the provider, key and model above (nothing is saved).");
         TestStatus = Ui.Hint("");
         DefaultTemp = new CheckBox { Content = "Use the model's default temperature", Margin = new Thickness(0, 0, 12, 0) };
@@ -83,15 +83,15 @@ internal sealed class SettingsWindow : Window
                 },
             },
         };
-        var providerHead = Ui.Section("Provider", "PlugConnected", "Indigo");
+        var providerHead = Ui.Section("Provider", "PlugConnected", "Blue");
         providerHead.Margin = new Thickness(0, 0, 0, 2);
         var ai = new StackPanel
         {
             Children =
             {
                 providerHead, ProviderBox, ProviderNotes,
-                Ui.Section("API key", "Key", "Madder"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
-                Ui.Section("Model", "BrainCircuit", "Plum"), Model, Ui.Row(ModelList, refresh),
+                Ui.Section("API key", "Key", "Pink"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
+                Ui.Section("Model", "BrainCircuit", "Violet"), Model, Ui.Row(ModelList, refresh),
                 Ui.Hint("Type a model name, or click Refresh list and pick one."),
                 Ui.Row(test), TestStatus,
                 Advanced,
@@ -110,7 +110,7 @@ internal sealed class SettingsWindow : Window
         var interval = Ui.Row(Ui.Text("Time allowed between the two presses:"), WindowMs, Unit("ms"));
         interval.Margin = new Thickness(28, 0, 0, 4);
         DoubleCopy.IsCheckedChanged += (_, _) => interval.IsEnabled = DoubleCopy.IsChecked == true;
-        var shortcutsHead = Ui.Section("Opening the menu", "Keyboard", "Indigo");
+        var shortcutsHead = Ui.Section("Opening the menu", "Keyboard", "Blue");
         shortcutsHead.Margin = new Thickness(0, 0, 0, 6);
         var platformNote = Os.IsWayland
             ? "Wayland session detected: system-wide shortcuts only work in X11/XWayland apps."
@@ -123,11 +123,11 @@ internal sealed class SettingsWindow : Window
                 shortcutsHead,
                 DoubleCopy, interval,
                 AltShortcut,
-                Ui.Section("Clipboard", "Clipboard", "Peacock"), RestoreClip,
-                Ui.Section("Selection limit", "TextWordCount", "Plum"),
+                Ui.Section("Clipboard", "Clipboard", "Orange"), RestoreClip,
+                Ui.Section("Selection limit", "TextWordCount", "Violet"),
                 Ui.Row(Ui.Text("Maximum words per selection:"), MaxWords),
                 Ui.Hint("Longer selections are not sent to the AI; Rewordly shows a message instead."),
-                Ui.Section("Appearance and startup", "PaintBrush", "Madder"),
+                Ui.Section("Appearance and startup", "PaintBrush", "Pink"),
                 Ui.Row(Ui.Text("Theme:"), ThemeBox),
                 StartAtLogin,
             },
@@ -213,13 +213,13 @@ internal sealed class SettingsWindow : Window
             Children =
             {
                 Ui.Card(brand, 18),
-                Ui.Section("This computer", "Window", "Plum"),
-                Fact("Window", "Plum", $"System: {Os.Name}{(Os.IsWayland ? " (Wayland)" : "")}"),
-                Fact("Speaker2", "Peacock", $"Speech: {_app.Tts.EngineName}"),
-                Fact("LockClosed", "Madder", $"Key storage: {_app.Secrets.Backend}"),
-                Fact("FolderOpen", "Indigo", $"Settings folder: {_app.Store.Folder}"),
-                Ui.Row(Ui.Btn("Open settings folder", () => { Directory.CreateDirectory(_app.Store.Folder); Os.Open(_app.Store.Folder); }, icon: "FolderOpen"), Ui.Btn("Quick guide", _app.ShowGuide, icon: "BookOpen", hue: "Peacock")),
-                Ui.Section("Privacy", "ShieldLock", "Leaf"),
+                Ui.Section("This computer", "Window", "Violet"),
+                Fact("Window", "Violet", $"System: {Os.Name}{(Os.IsWayland ? " (Wayland)" : "")}"),
+                Fact("Speaker2", "Orange", $"Speech: {_app.Tts.EngineName}"),
+                Fact("LockClosed", "Pink", $"Key storage: {_app.Secrets.Backend}"),
+                Fact("FolderOpen", "Blue", $"Settings folder: {_app.Store.Folder}"),
+                Ui.Row(Ui.Btn("Open settings folder", () => { Directory.CreateDirectory(_app.Store.Folder); Os.Open(_app.Store.Folder); }, icon: "FolderOpen"), Ui.Btn("Quick guide", _app.ShowGuide, icon: "BookOpen", hue: "Orange")),
+                Ui.Section("Privacy", "ShieldLock", "Green"),
                 Ui.Text("Your text is sent only to the AI provider you choose. Nothing is sent anywhere else.", muted: true),
             },
         };
@@ -230,10 +230,10 @@ internal sealed class SettingsWindow : Window
             Padding = new Thickness(8, 0),
             ItemsSource = new[]
             {
-                new TabItem { FontSize = 15, Header = Ui.TabHeader("AI model", "BrainCircuit", "Indigo"), Content = Pad(ai) },
-                new TabItem { FontSize = 15, Header = Ui.TabHeader("Shortcuts & behaviour", "Keyboard", "Madder"), Content = Pad(behaviour) },
-                new TabItem { FontSize = 15, Header = Ui.TabHeader("Prompts", "TextDescription", "Plum"), Content = Pad(prompts) },
-                new TabItem { FontSize = 15, Header = Ui.TabHeader("About", "Info", "Peacock"), Content = Pad(about) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("AI model", "BrainCircuit", "Blue"), Content = Pad(ai) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("Shortcuts & behaviour", "Keyboard", "Pink"), Content = Pad(behaviour) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("Prompts", "TextDescription", "Violet"), Content = Pad(prompts) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("About", "Info", "Orange"), Content = Pad(about) },
             },
         };
         var save = Ui.Btn("Save", SaveAndClose, primary: true, icon: "CheckmarkCircle");

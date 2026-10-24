@@ -31,25 +31,25 @@ internal static class MenuFactory
         items.Add(new Separator());
 
         // Proofreading first: the most common, no further choice needed.
-        items.Add(With(Act(isHi ? "सुधारें और बेहतर बनाएं (Improve)" : "Correct and improve", new ActionSpec(ActionKind.Improve)), "TextGrammarWand", "Leaf"));
-        items.Add(With(Act(isHi ? "सिर्फ गलतियाँ ठीक करें (Fix errors)" : "Fix errors only", new ActionSpec(ActionKind.Fix)), "TextGrammarCheckmark", "Leaf"));
+        items.Add(With(Act(isHi ? "सुधारें और बेहतर बनाएं (Improve)" : "Correct and improve", new ActionSpec(ActionKind.Improve)), "TextGrammarWand", "Green"));
+        items.Add(With(Act(isHi ? "सिर्फ गलतियाँ ठीक करें (Fix errors)" : "Fix errors only", new ActionSpec(ActionKind.Fix)), "TextGrammarCheckmark", "Green"));
         items.Add(new Separator());
 
         // Recently used styles stay one click away; every style lives in one submenu.
-        foreach (var r in s.RecentStyles) items.Add(With(Act(Catalog.StyleLabel(r, lang), new ActionSpec(ActionKind.Style, r)), "PenSparkle", "Madder"));
+        foreach (var r in s.RecentStyles) items.Add(With(Act(Catalog.StyleLabel(r, lang), new ActionSpec(ActionKind.Style, r)), "PenSparkle", "Pink"));
 
-        var styles = With(new MenuItem { Header = isHi ? "किसी स्टाइल में दोबारा लिखें (Rewrite in a style)" : "Rewrite in a style" }, "TextEffects", "Madder");
+        var styles = With(new MenuItem { Header = isHi ? "किसी स्टाइल में दोबारा लिखें (Rewrite in a style)" : "Rewrite in a style" }, "TextEffects", "Pink");
         foreach (var st in Catalog.MainStyles)
             styles.Items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
         styles.Items.Add(new Separator());
 
-        var other = With(new MenuItem { Header = isHi ? "अन्य स्टाइल (Other styles)" : "Other styles" }, "TextEditStyle", "Madder");
+        var other = With(new MenuItem { Header = isHi ? "अन्य स्टाइल (Other styles)" : "Other styles" }, "TextEditStyle", "Pink");
         foreach (var st in Catalog.OtherStyles) other.Items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
         styles.Items.Add(other);
 
         // My styles
-        var mine = With(new MenuItem { Header = isHi ? "मेरे बनाए स्टाइल (My styles)" : "My styles" }, "Edit", "Madder");
-        var add = With(new MenuItem { Header = isHi ? "नया स्टाइल जोड़ें… (Add a style…)" : "Add a style…" }, "Add", "Madder");
+        var mine = With(new MenuItem { Header = isHi ? "मेरे बनाए स्टाइल (My styles)" : "My styles" }, "Edit", "Pink");
+        var add = With(new MenuItem { Header = isHi ? "नया स्टाइल जोड़ें… (Add a style…)" : "Add a style…" }, "Add", "Pink");
         add.Click += async (_, _) =>
         {
             menu.Close();
@@ -92,7 +92,7 @@ internal static class MenuFactory
         items.Add(styles);
         items.Add(new Separator());
 
-        var sum = With(new MenuItem { Header = isHi ? "समरी (Summary)" : "Summary" }, "TextBulletListSquare", "Plum");
+        var sum = With(new MenuItem { Header = isHi ? "समरी (Summary)" : "Summary" }, "TextBulletListSquare", "Violet");
         foreach (var p in Catalog.SummaryPercents)
         {
             var summaryLabel = isHi
@@ -102,20 +102,20 @@ internal static class MenuFactory
         }
         items.Add(sum);
 
-        var exp = With(new MenuItem { Header = isHi ? "समझाएं (Explain)" : "Explain" }, "Lightbulb", "Plum");
+        var exp = With(new MenuItem { Header = isHi ? "समझाएं (Explain)" : "Explain" }, "Lightbulb", "Violet");
         exp.Items.Add(new MenuItem { Header = isHi ? "पढ़ने वाले की समझ का स्तर:" : "Reader's knowledge level:", IsEnabled = false });
         foreach (var l in Catalog.Levels) exp.Items.Add(Act(Catalog.LevelLabel(l.Id, lang), new ActionSpec(ActionKind.Explain, l.Id)));
         items.Add(exp);
 
-        var tr = With(new MenuItem { Header = isHi ? "अनुवाद करें (Translate into)" : "Translate into" }, "Translate", "Peacock");
+        var tr = With(new MenuItem { Header = isHi ? "अनुवाद करें (Translate into)" : "Translate into" }, "Translate", "Orange");
         foreach (var c in TranslateItems(app, langChoice => app.Run(new ActionSpec(ActionKind.Translate, langChoice), text, target), menu.Close)) tr.Items.Add(c);
         items.Add(tr);
         items.Add(new Separator());
 
-        items.Add(With(Act(isHi ? "बातचीत (Chat…)" : "Chat…", new ActionSpec(ActionKind.Chat)), "ChatSparkle", "Indigo"));
-        items.Add(With(Act(isHi ? "बोलकर सुनाएं (Listen)" : "Listen", new ActionSpec(ActionKind.Listen)), "Speaker2", "Peacock"));
+        items.Add(With(Act(isHi ? "बातचीत (Chat…)" : "Chat…", new ActionSpec(ActionKind.Chat)), "ChatSparkle", "Blue"));
+        items.Add(With(Act(isHi ? "बोलकर सुनाएं (Listen)" : "Listen", new ActionSpec(ActionKind.Listen)), "Speaker2", "Orange"));
         items.Add(new Separator());
-        items.Add(With(ModelMenu(app, menu.Close), "BrainCircuit", "Indigo"));
+        items.Add(With(ModelMenu(app, menu.Close), "BrainCircuit", "Blue"));
         var cancel = With(new MenuItem { Header = isHi ? "रद्द करें (Cancel)" : "Cancel" }, "Dismiss", "Muted");
         cancel.Click += (_, _) => menu.Close();
         items.Add(cancel);

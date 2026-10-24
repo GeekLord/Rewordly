@@ -38,10 +38,10 @@ internal sealed class ChatWindow : Window
             ? "Not available here: Chat was opened without selected text. Use Copy reply instead."
             : "Paste the reply into the window you copied from, replacing the selection.");
         ToolTip.SetShowOnDisabled(paste, true);
-        var copy = Ui.Btn("Copy reply", icon: "Copy", hue: "Plum", onClick: async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Reply copied to the clipboard"; } });
-        var useReply = Ui.Btn("Move reply into Text", icon: "ArrowUndo", hue: "Madder", onClick: () => { _text.Text = _reply.Text; _reply.Text = ""; _instruction.Focus(); });
+        var copy = Ui.Btn("Copy reply", icon: "Copy", hue: "Violet", onClick: async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Reply copied to the clipboard"; } });
+        var useReply = Ui.Btn("Move reply into Text", icon: "ArrowUndo", hue: "Pink", onClick: () => { _text.Text = _reply.Text; _reply.Text = ""; _instruction.Focus(); });
         ToolTip.SetTip(useReply, "Replace the text above with this reply, so your next instruction works on it.");
-        var listen = Ui.Btn("Listen", icon: "Speaker2", hue: "Peacock", onClick: () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
+        var listen = Ui.Btn("Listen", icon: "Speaker2", hue: "Orange", onClick: () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
         _keep = new CheckBox { Content = "Remember earlier messages", Margin = new Thickness(4, 0, 12, 6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         ToolTip.SetTip(_keep, "Include your earlier instructions and replies in each new request. Turn off to start fresh.");
         _keep.IsCheckedChanged += (_, _) => { if (_keep.IsChecked != true) _history.Clear(); };

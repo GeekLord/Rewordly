@@ -23,7 +23,9 @@ Works inside every app on all three desktop systems, not in a browser tab. Reque
 ## Brand commitments
 
 - Name: Rewordly. The current app icon is temporary and is NOT a brand reference (owner, 2026-10-25).
-- No palette, logo or typeface is fixed yet; the visual world is open.
+- Rewordly is a global product: no regional or cultural motifs (owner, 2026-10-25, after rejecting an Indian block-print direction).
+- Visual world: highlighter on paper. Paper/ink neutrals, marker inks as the only colour, highlighter yellow for the main action, the marker-set rule (yellow, orange, pink, violet, blue) under every header. Icon: three text lines on an ink tile, the middle one highlighted.
+- Typeface: Inter (bundled with Avalonia). Rejected earlier: indigo-to-cyan gradient (looked generic), block print (regional).
 - Licence: MIT. Third-party icons must be credited.
 
 ## Accessibility

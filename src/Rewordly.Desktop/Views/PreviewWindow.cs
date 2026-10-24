@@ -40,11 +40,11 @@ internal sealed class PreviewWindow : Window
         ShowOriginal.IsCheckedChanged += (_, _) => Original.IsVisible = ShowOriginal.IsChecked == true;
 
         PasteButton = Ui.Btn("Paste and replace", PasteAsync, primary: true, icon: "ClipboardPaste");
-        CopyButton = Ui.Btn("Copy", CopyAsync, icon: "Copy", hue: "Plum");
-        RegenButton = Ui.Btn("Regenerate", RegenerateAsync, icon: "ArrowClockwise", hue: "Madder");
+        CopyButton = Ui.Btn("Copy", CopyAsync, icon: "Copy", hue: "Violet");
+        RegenButton = Ui.Btn("Regenerate", RegenerateAsync, icon: "ArrowClockwise", hue: "Pink");
         var flyout = new MenuFlyout();
         flyout.ItemsSource = MenuFactory.TranslateItems(_app, lang => _ = TranslateAsync(lang), () => flyout.Hide());
-        TranslateButton = new DropDownButton { Content = Ui.BtnContent("Translate result", "Translate", "Peacock"), Flyout = flyout, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        TranslateButton = new DropDownButton { Content = Ui.BtnContent("Translate result", "Translate", "Orange"), Flyout = flyout, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
         BackButton = Ui.Btn("Undo translation", icon: "ArrowUndo", hue: "Muted", onClick: () => { Result.Text = _baseResult; BackButton!.IsVisible = false; Status.Text = "Showing the untranslated result"; });
         BackButton.IsVisible = false;
         ToolTip.SetTip(BackButton, "Go back to the result before it was translated.");
@@ -55,7 +55,7 @@ internal sealed class PreviewWindow : Window
         var listenOrig = new MenuItem { Header = "Original text" };
         listenOrig.Click += (_, _) => Ui.ShowFocused(new SpeechWindow(_original));
         listenMenu.ItemsSource = new List<Control> { listenRes, listenOrig };
-        ListenButton = new DropDownButton { Content = Ui.BtnContent("Listen", "Speaker2", "Peacock"), Flyout = listenMenu, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        ListenButton = new DropDownButton { Content = Ui.BtnContent("Listen", "Speaker2", "Orange"), Flyout = listenMenu, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
         ToolTip.SetTip(ListenButton, "Read the result or the original aloud.");
 
         var cfg = _app.Settings.Active;

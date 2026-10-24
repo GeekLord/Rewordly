@@ -22,10 +22,10 @@ internal sealed class GuideWindow : Window
             Control badge = num != null
                 ? new Border
                 {
-                    Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = Views.Theme.IndigoDye(),
-                    Child = new TextBlock { Text = num, Foreground = Avalonia.Media.Brushes.White, FontFamily = Views.Theme.Display, FontSize = 17, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+                    Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = Views.Theme.Highlighter(),
+                    Child = new TextBlock { Text = num, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(Views.Theme.Ink)), FontWeight = Avalonia.Media.FontWeight.Bold, FontSize = 14, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
                 }
-                : Ui.Chip("Info", "Peacock", 30);
+                : Ui.Chip("Info", "Orange", 30);
             badge.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
             badge.Margin = new Thickness(0, 0, 14, 0);
             var heading = Ui.Text(title, bold: true, size: 15);

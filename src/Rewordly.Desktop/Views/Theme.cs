@@ -10,80 +10,66 @@ using Avalonia.Themes.Fluent;
 namespace Rewordly.Desktop.Views;
 
 /// <summary>
-/// Rewordly's visual world: hand block-printed cotton. Indigo vat dye is the shell, madder red is the
-/// one main action, and the other dyes (plum, peacock, leaf, turmeric) mark the kind of action.
-/// Neutrals come from one ramp between unbleached cotton and indigo-black ink; nothing else is grey.
-/// Every dye passes 4.5:1 against the ground in both themes; every surface carrying white text passes 4.5:1.
+/// Rewordly's visual world: highlighter on paper. Surfaces are plain paper (light) or ink (dark); colour
+/// comes only from marker inks. Highlighter yellow is the one main action; the other inks (pink, violet,
+/// blue, orange, green) mark the kind of action, always together with an icon.
+/// Every ink passes 4.5:1 against the ground in both themes; ink-on-yellow is 11:1 or better.
 /// </summary>
 internal static class Theme
 {
-    // ------------------------------------------------------------------ neutral ramp (cotton → ink)
-    public const string Cotton = "#FBF8F2";     // light ground
+    // ------------------------------------------------------------------ neutral ramp (paper → ink)
+    public const string Ground = "#F8F8F6";     // light ground
     public const string Paper = "#FFFFFF";      // light raised surface
-    public const string Thread = "#E7E1D4";     // light hairline
-    public const string Ink = "#1B1E33";        // light text
-    public const string Night = "#10142A";      // dark ground (indigo-black)
-    public const string NightRaised = "#181D38";
-    public const string NightThread = "#2A3052";
-    public const string Bleach = "#F3EEE3";     // dark text
+    public const string Rule = "#E4E3DE";       // light hairline
+    public const string Ink = "#15171C";        // light text, dark header
+    public const string Night = "#121317";      // dark ground
+    public const string NightRaised = "#1A1C22";
+    public const string NightRule = "#2B2E37";
+    public const string Chalk = "#EDECE8";      // dark text
 
-    /// <summary>Dye colours per kind of action: (light theme, dark theme).</summary>
+    /// <summary>Marker inks per kind of action: (light theme, dark theme), both text-safe.</summary>
     public static readonly IReadOnlyDictionary<string, (string Light, string Dark)> Hues = new Dictionary<string, (string, string)>
     {
-        ["Indigo"] = ("#2F3D9E", "#9AA6FF"),   // the app itself, settings, chat
-        ["Madder"] = ("#B5382A", "#FF8A73"),   // rewriting and styles
-        ["Plum"] = ("#7B3A8C", "#D59BE8"),     // summary, explain, models
-        ["Peacock"] = ("#0F7480", "#5FD0D9"),  // translate, listen
-        ["Leaf"] = ("#2E7D4F", "#6FD39A"),     // proofreading, success
-        ["Turmeric"] = ("#9A6400", "#F2B544"), // warnings, keys
-        ["Muted"] = ("#6B6577", "#A8A3B8"),    // neutral
+        ["Blue"] = ("#1D64C2", "#7DB6FF"),    // the app itself, settings, chat
+        ["Pink"] = ("#C2185B", "#FF7FB4"),    // rewriting and styles
+        ["Violet"] = ("#6A3FD0", "#B9A2FF"),  // summary, explain, models
+        ["Orange"] = ("#B24A0B", "#FF9F63"),  // translate, listen
+        ["Green"] = ("#1A7A43", "#5EDB8F"),   // proofreading, success
+        ["Yellow"] = ("#8A6200", "#FFD84A"),  // warnings, keys
+        ["Muted"] = ("#64666E", "#A3A6B0"),   // neutral
     };
 
-    public static readonly FontFamily Display = new("avares://Rewordly/Assets/Fonts#DM Serif Display");
+    /// <summary>The bright highlighter ink itself, used for washes behind icons.</summary>
+    public static readonly IReadOnlyDictionary<string, string> Wash = new Dictionary<string, string>
+    {
+        ["Blue"] = "#4DA3FF", ["Pink"] = "#FF5FA2", ["Violet"] = "#9B7BFF", ["Orange"] = "#FF8A3D",
+        ["Green"] = "#3DDC84", ["Yellow"] = "#FFD43B", ["Muted"] = "#9A9CA5",
+    };
 
     public static Bitmap Asset(string name) => new(AssetLoader.Open(new Uri($"avares://Rewordly/Assets/Brand/{name}")));
 
-    private static Bitmap? _headerTile, _borderStrip;
+    private static Bitmap? _strokes;
+    public static Bitmap HeaderStrokes => _strokes ??= Asset("header-strokes.png");
 
-    /// <summary>The block-printed cloth, tiled at its natural scale.</summary>
-    public static ImageBrush ClothBrush() => new(_headerTile ??= Asset("header-tile.jpg"))
+    /// <summary>Ink band behind every header.</summary>
+    public static LinearGradientBrush InkBand() => Gradient(0, "#15171C", "#1E2028", "#262833");
+
+    /// <summary>The marker set in a row: the thin rule under every header and the progress bar.</summary>
+    public static LinearGradientBrush Markers() => Gradient(0, "#FFD43B", "#FF8A3D", "#FF5FA2", "#9B7BFF", "#4DA3FF");
+
+    /// <summary>Highlighter yellow for the main action and small solid marks.</summary>
+    public static LinearGradientBrush Highlighter() => Gradient("#FFE066", "#FFC93C");
+    private static LinearGradientBrush HighlighterHover() => Gradient("#FFE985", "#FFD24F");
+    private static LinearGradientBrush HighlighterPressed() => Gradient("#F5CC2E", "#F0B82A");
+
+    /// <summary>Horizontal gradient (angle 0) through the given stops.</summary>
+    public static LinearGradientBrush Gradient(int horizontal, params string[] stops)
     {
-        TileMode = TileMode.Tile, Stretch = Stretch.Fill,
-        DestinationRect = new RelativeRect(0, 0, 86, 106, RelativeUnit.Absolute),
-    };
-
-    /// <summary>The cloth's printed border (turmeric vine, madder flowers), used as the edge of every header.</summary>
-    public static Control BorderStrip(double height) => new Border
-    {
-        Height = height, ClipToBounds = true,
-        Child = new Image
-        {
-            Source = _borderStrip ??= Asset("border-strip.jpg"), Stretch = Stretch.Fill,
-            Height = height, Width = height * _borderStrip!.PixelSize.Width / _borderStrip.PixelSize.Height,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-        },
-    };
-
-    /// <summary>Indigo dye laid over the cloth: dense where the title sits, thinning to show the print on the right.</summary>
-    public static LinearGradientBrush DyeOverlay() => new()
-    {
-        StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
-        EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
-        GradientStops =
-        {
-            new GradientStop(Color.Parse("#F218206A"), 0),
-            new GradientStop(Color.Parse("#EA1C2270"), 0.55),
-            new GradientStop(Color.Parse("#992A1F6E"), 0.8),
-            new GradientStop(Color.Parse("#554A2470"), 1),
-        },
-    };
-
-    /// <summary>Indigo → plum dye for small solid marks (step badges, chips that carry white text).</summary>
-    public static LinearGradientBrush IndigoDye() => Gradient("#2F3D9E", "#1F2878", "#4A2470");
-
-    private static LinearGradientBrush MadderBrush() => Gradient("#C8412F", "#A3303F");
-    private static LinearGradientBrush MadderHoverBrush() => Gradient("#B83524", "#962A3A");
-    private static LinearGradientBrush MadderPressedBrush() => Gradient("#A32E20", "#82232F");
+        var b = Gradient(stops);
+        b.EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative);
+        b.StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative);
+        return b;
+    }
 
     public static LinearGradientBrush Gradient(params string[] stops)
     {
@@ -104,11 +90,11 @@ internal static class Theme
         var fluent = new FluentTheme();
         fluent.Palettes[ThemeVariant.Light] = new ColorPaletteResources
         {
-            Accent = Color.Parse("#2F3D9E"), RegionColor = Color.Parse(Cotton), BaseHigh = Color.Parse(Ink),
+            Accent = Color.Parse("#1D64C2"), RegionColor = Color.Parse(Ground), BaseHigh = Color.Parse(Ink),
         };
         fluent.Palettes[ThemeVariant.Dark] = new ColorPaletteResources
         {
-            Accent = Color.Parse("#7F8CF0"), RegionColor = Color.Parse(Night), BaseHigh = Color.Parse(Bleach),
+            Accent = Color.Parse("#5E9FF5"), RegionColor = Color.Parse(Night), BaseHigh = Color.Parse(Chalk),
         };
         app.Styles.Add(fluent);
 
@@ -116,20 +102,19 @@ internal static class Theme
         var dark = new ResourceDictionary();
         foreach (var (name, (l, d)) in Hues)
         {
-            var lc = Color.Parse(l); var dc = Color.Parse(d);
-            light["Hue." + name] = new SolidColorBrush(lc);
-            dark["Hue." + name] = new SolidColorBrush(dc);
-            light["Chip." + name] = new SolidColorBrush(Color.FromArgb(0x1C, lc.R, lc.G, lc.B));
-            dark["Chip." + name] = new SolidColorBrush(Color.FromArgb(0x2A, dc.R, dc.G, dc.B));
+            light["Hue." + name] = B(l);
+            dark["Hue." + name] = B(d);
+            var w = Color.Parse(Wash[name]);
+            light["Chip." + name] = new SolidColorBrush(Color.FromArgb(0x38, w.R, w.G, w.B));
+            dark["Chip." + name] = new SolidColorBrush(Color.FromArgb(0x30, w.R, w.G, w.B));
         }
         light["Rw.CardBackground"] = B(Paper);
         dark["Rw.CardBackground"] = B(NightRaised);
-        light["Rw.CardBorder"] = B(Thread);
-        dark["Rw.CardBorder"] = B(NightThread);
+        light["Rw.CardBorder"] = B(Rule);
+        dark["Rw.CardBorder"] = B(NightRule);
         light["Rw.Ink"] = B(Ink);
-        dark["Rw.Ink"] = B(Bleach);
+        dark["Rw.Ink"] = B(Chalk);
 
-        // Secondary controls sit on the ramp: paper with a thread-coloured hairline, or raised night.
         void Surface(ResourceDictionary d, string bg, string hover, string pressed, string border, string field, string flyout)
         {
             foreach (var k in new[] { "ButtonBackground", "ComboBoxBackground", "NumericUpDownBackground" }) d[k] = B(bg);
@@ -143,33 +128,36 @@ internal static class Theme
             d["ComboBoxDropDownBackground"] = B(flyout);
             d["MenuFlyoutPresenterBorderBrush"] = B(border);
         }
-        Surface(light, Paper, "#F5F0E6", "#ECE5D7", "#DCD4C4", Paper, Paper);
-        Surface(dark, "#1E2444", "#262D52", "#181D38", "#363E66", "#0B0E1F", "#1A1F3C");
+        Surface(light, Paper, "#F2F2EE", "#E9E9E4", "#D9D8D2", Paper, Paper);
+        Surface(dark, "#22252D", "#2A2E37", "#1A1C22", "#363A46", "#0D0E11", "#1C1E25");
+        foreach (var d in new[] { light, dark })
+            foreach (var k in new[] { "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed" })
+                d[k] = B(Ink);
         app.Resources["ButtonBorderThemeThickness"] = new Thickness(1);
         app.Resources.ThemeDictionaries[ThemeVariant.Light] = light;
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = dark;
-        app.Resources["ControlCornerRadius"] = new CornerRadius(7);
+        app.Resources["ControlCornerRadius"] = new CornerRadius(8);
         app.Resources["OverlayCornerRadius"] = new CornerRadius(12);
 
-        // The one main action per window: madder dye with white text. Disabled keeps Fluent's grey.
+        // The one main action per window: highlighter yellow with ink text, the same in both themes.
+        var ink = B(Ink);
         Style Accent(Func<Selector?, Selector> state, IBrush bg) => new(x => state(x.OfType<Button>().Class("accent"))
             .Not(y => y.Class(":disabled")).Template().OfType<ContentPresenter>().Name("PART_ContentPresenter"))
         {
             Setters =
             {
                 new Setter(ContentPresenter.BackgroundProperty, bg),
-                new Setter(ContentPresenter.ForegroundProperty, Brushes.White),
-                new Setter(ContentPresenter.BorderBrushProperty, Brushes.Transparent),
+                new Setter(ContentPresenter.ForegroundProperty, ink),
+                new Setter(ContentPresenter.BorderBrushProperty, B("#E0AE1F")),
             },
         };
-        app.Styles.Add(Accent(x => x!, MadderBrush()));
-        app.Styles.Add(Accent(x => x!.Class(":pointerover"), MadderHoverBrush()));
-        app.Styles.Add(Accent(x => x!.Class(":pressed"), MadderPressedBrush()));
+        app.Styles.Add(Accent(x => x!, Highlighter()));
+        app.Styles.Add(Accent(x => x!.Class(":pointerover"), HighlighterHover()));
+        app.Styles.Add(Accent(x => x!.Class(":pressed"), HighlighterPressed()));
 
-        // Progress runs through the dyes in printing order.
         app.Styles.Add(new Style(x => x.OfType<ProgressBar>())
         {
-            Setters = { new Setter(ProgressBar.ForegroundProperty, Gradient("#2F3D9E", "#7B3A8C", "#C8412F", "#E8A33D")) },
+            Setters = { new Setter(ProgressBar.ForegroundProperty, Markers()) },
         });
     }
 }
