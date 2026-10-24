@@ -140,7 +140,7 @@ internal sealed class PreviewWindow : Window
         SetBusy(true);
         try
         {
-            var prompt = Prompts.Build(_app.Settings, new ActionSpec(ActionKind.Translate, lang), source);
+            var prompt = Prompts.BuildRetranslate(_app.Settings, lang, source);
             var r = await _app.RunWithBusyAsync(prompt, $"Translating into {lang}", ChosenModel);
             if (r == null) return;
             Result.Text = TextUtil.CleanModelOutput(r.Text, source);

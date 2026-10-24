@@ -16,7 +16,7 @@ internal sealed class SettingsWindow : Window
     private string _provider;
     private bool _loading;
 
-    internal readonly ComboBox ProviderBox, ModelList, ThemeBox, PromptKeyBox;
+    internal readonly ComboBox ProviderBox, ModelList, ThemeBox, PromptKeyBox, PromptLanguageBox;
     internal readonly TextBox BaseUrl, ApiKey, Model, PromptEditor;
     internal readonly TextBlock ProviderNotes, KeyInfo, TestStatus;
     internal readonly CheckBox ShowKey, DefaultTemp, StartAtLogin, DoubleCopy, AltShortcut, RestoreClip;
@@ -98,9 +98,20 @@ internal sealed class SettingsWindow : Window
         };
 
         // ---------------------------------------------------------------- prompts tab
-        var keys = Prompts.Defaults.Keys.ToList();
-        PromptKeyBox = new ComboBox { ItemsSource = keys.Select(k => Prompts.Labels.TryGetValue(k, out var l) ? l : k).ToList(), MinWidth = 320 };
+        var keys = Prompts.Labels.Keys.ToList();
+        PromptKeyBox = new ComboBox { ItemsSource = keys.Select(k => Prompts.Labels[k]).ToList(), MinWidth = 320 };
+        var langLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["en"] = "English (en)",
+            ["it"] = "Italiano (it)",
+            ["es"] = "Español (es)",
+            ["fr"] = "Français (fr)",
+            ["de"] = "Deutsch (de)",
+        };
+        var langs = Prompts.SupportedLanguages.ToList();
+        PromptLanguageBox = new ComboBox { ItemsSource = langs.Select(l => langLabels.TryGetValue(l, out var name) ? name : l).ToList(), MinWidth = 200 };
         PromptEditor = new TextBox { AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Height = 340, FontFamily = "monospace", FontSize = 13 };
+
         PromptKeyBox.SelectionChanged += (_, _) =>
         {
             if (_loading || PromptKeyBox.SelectedIndex < 0) return;
@@ -108,14 +119,26 @@ internal sealed class SettingsWindow : Window
             _promptKey = keys[PromptKeyBox.SelectedIndex];
             PromptEditor.Text = Prompts.Template(_work, _promptKey);
         };
-        var reset = Ui.Btn("Reset to default", () => { _work.PromptOverrides.Remove(_promptKey); PromptEditor.Text = Prompts.Defaults[_promptKey]; });
+        PromptLanguageBox.SelectionChanged += (_, _) =>
+        {
+            if (_loading || PromptLanguageBox.SelectedIndex < 0) return;
+            StorePrompt();
+            _work.PromptLanguage = langs[PromptLanguageBox.SelectedIndex];
+            PromptEditor.Text = Prompts.Template(_work, _promptKey);
+        };
+        var reset = Ui.Btn("Reset to default", () =>
+        {
+            _work.PromptOverrides.Remove(_promptKey);
+            PromptEditor.Text = Prompts.GetDefault(_promptKey, _work.PromptLanguage);
+        });
         var prompts = new StackPanel
         {
             Spacing = 6,
             Children =
             {
+                Ui.Row(Ui.Text("Template language:"), PromptLanguageBox),
                 Ui.Text("Prompt", bold: true), PromptKeyBox, PromptEditor, Ui.Row(reset),
-                Ui.Text("Placeholders: {text} (required except in system prompts), {style}, {words}, {level}, {language}.", muted: true),
+                Ui.Text("Placeholders: {selectedText} or {text}, {selectedStyle}, {num}, {value}, {currentResultText}.", muted: true),
             },
         };
 
@@ -178,8 +201,10 @@ internal sealed class SettingsWindow : Window
         AltShortcut.IsChecked = _work.TriggerAltShortcut;
         RestoreClip.IsChecked = _work.RestoreClipboard;
         MaxWords.Value = _work.MaxWords;
-        var keys = Prompts.Defaults.Keys.ToList();
-        PromptKeyBox.SelectedIndex = Math.Max(0, keys.IndexOf(_promptKey));
+        var keys = Prompts.Labels.Keys.ToList();
+        PromptKeyBox.SelectedIndex = Math.Max(0, keys.FindIndex(k => k.Equals(_promptKey, StringComparison.OrdinalIgnoreCase)));
+        var langs = Prompts.SupportedLanguages.ToList();
+        PromptLanguageBox.SelectedIndex = Math.Max(0, langs.FindIndex(l => l.Equals(_work.PromptLanguage, StringComparison.OrdinalIgnoreCase)));
         PromptEditor.Text = Prompts.Template(_work, _promptKey);
         _loading = false;
     }
@@ -217,8 +242,10 @@ internal sealed class SettingsWindow : Window
     private void StorePrompt()
     {
         var t = PromptEditor.Text ?? "";
-        if (t == Prompts.Defaults[_promptKey] || string.IsNullOrWhiteSpace(t)) _work.PromptOverrides.Remove(_promptKey);
-        else _work.PromptOverrides[_promptKey] = t;
+        if (t == Prompts.GetDefault(_promptKey, _work.PromptLanguage) || string.IsNullOrWhiteSpace(t))
+            _work.PromptOverrides.Remove(_promptKey);
+        else
+            _work.PromptOverrides[_promptKey] = t;
     }
 
     /// <summary>A client built from what's currently typed in the form (not yet saved).</summary>
@@ -273,10 +300,11 @@ internal sealed class SettingsWindow : Window
         StorePrompt();
         foreach (var (k, t) in _work.PromptOverrides)
         {
-            if (k is Prompts.KeySystem or Prompts.KeyChatSystem) continue;
-            if (!t.Contains("{text}"))
+            if (k.Equals(Prompts.KeySystem, StringComparison.OrdinalIgnoreCase) ||
+                k.Equals(Prompts.KeyChatSystem, StringComparison.OrdinalIgnoreCase)) continue;
+            if (!t.Contains("{text}") && !t.Contains("{selectedText}") && !t.Contains("{currentResultText}"))
             {
-                await Dialog.InfoAsync("Rewordly", $"The prompt \"{(Prompts.Labels.TryGetValue(k, out var l) ? l : k)}\" must contain {{text}} where the selected text goes.");
+                await Dialog.InfoAsync("Rewordly", $"The prompt \"{(Prompts.Labels.TryGetValue(k, out var l) ? l : k)}\" must contain {{selectedText}} or {{text}} where the text goes.");
                 return;
             }
         }

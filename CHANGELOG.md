@@ -23,3 +23,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Single instance enforcement across all supported operating systems.
 - Automated packaging scripts for Windows (zip), macOS (.app), and Linux (tar.gz).
 - GitHub Actions CI matrix and automated release pipelines.
+- Localized default prompt templates for English, Italian, Spanish, French, and German across all rewriting actions.

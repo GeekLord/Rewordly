@@ -45,6 +45,7 @@ public sealed class AppSettings
     public List<string> RecentLanguages { get; set; } = new();
     public List<string> CustomStyles { get; set; } = new();
     public List<string> ExtraLanguages { get; set; } = new();
+    public string PromptLanguage { get; set; } = "en"; // en | it | es | fr | de
     public Dictionary<string, string> PromptOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public ProviderConfig GetProvider(string id)
@@ -69,6 +70,8 @@ public sealed class AppSettings
             Providers = new Dictionary<string, ProviderConfig>(Providers, StringComparer.OrdinalIgnoreCase);
         if (PromptOverrides.Comparer != StringComparer.OrdinalIgnoreCase)
             PromptOverrides = new Dictionary<string, string>(PromptOverrides, StringComparer.OrdinalIgnoreCase);
+        if (PromptLanguage is not ("en" or "it" or "es" or "fr" or "de"))
+            PromptLanguage = "en";
         TimeoutSeconds = Math.Clamp(TimeoutSeconds, 10, 600);
         DoubleCopyWindowMs = Math.Clamp(DoubleCopyWindowMs, 200, 3000);
         MaxWords = Math.Clamp(MaxWords, 50, 20000);

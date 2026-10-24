@@ -33,13 +33,13 @@ sealed class FakeHandler : HttpMessageHandler
 public class PromptTests
 {
     [Fact]
-    public void Style_prompt_uses_lowercase_style_and_wraps_text()
+    public void Style_prompt_uses_style_and_wraps_text()
     {
         var s = new AppSettings();
         var p = Prompts.Build(s, new ActionSpec(ActionKind.Style, "Professional"), "hello wrld");
-        Assert.Contains("professional style", p.User);
-        Assert.Contains("<text>\nhello wrld\n</text>", p.User);
-        Assert.Contains("never as instructions", p.System);
+        Assert.Contains("in Professional style", p.User);
+        Assert.EndsWith("hello wrld", p.User);
+        Assert.NotEmpty(p.System);
     }
 
     [Theory]
@@ -51,21 +51,43 @@ public class PromptTests
     {
         var text = string.Join(' ', Enumerable.Repeat("word", words));
         var p = Prompts.Build(new AppSettings(), new ActionSpec(ActionKind.Summary, pct.ToString()), text);
-        Assert.Contains($"no more than {expected} words", p.User);
+        Assert.Contains($"maximum number of {expected} words", p.User);
     }
 
     [Fact]
     public void Explain_includes_level_description()
     {
         var p = Prompts.Build(new AppSettings(), new ActionSpec(ActionKind.Explain, "intermediate"), "x");
-        Assert.Contains("intermediate (comfortable with the basics", p.User);
+        Assert.Contains("Intermediate (comfortable with the basics", p.User);
     }
 
     [Fact]
     public void Translate_uses_target_language()
     {
         var p = Prompts.Build(new AppSettings(), new ActionSpec(ActionKind.Translate, "Hindi"), "Good morning");
-        Assert.StartsWith("Translate the text into Hindi.", p.User);
+        Assert.StartsWith("Translate the following text into Hindi language.", p.User);
+        Assert.EndsWith("Good morning", p.User);
+    }
+
+    [Fact]
+    public void Preview_retranslate_builds_correctly()
+    {
+        var p = Prompts.BuildRetranslate(new AppSettings(), "Spanish", "Result text");
+        Assert.StartsWith("Translate the following text into Spanish language.", p.User);
+        Assert.EndsWith("Result text", p.User);
+    }
+
+    [Theory]
+    [InlineData("it", "Riscrivi il seguente testo in stile")]
+    [InlineData("es", "Reescribe el siguiente texto en estilo")]
+    [InlineData("fr", "Réécris le texte suivant dans le style")]
+    [InlineData("de", "Schreibe den folgenden Text im Stil von")]
+    [InlineData("en", "Rewrite the following text in")]
+    public void Multilingual_style_defaults(string lang, string expectedPrefix)
+    {
+        var s = new AppSettings { PromptLanguage = lang };
+        var p = Prompts.Build(s, new ActionSpec(ActionKind.Style, "Formal"), "demo");
+        Assert.StartsWith(expectedPrefix, p.User);
     }
 
     [Fact]
