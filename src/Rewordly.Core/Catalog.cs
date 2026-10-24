@@ -17,6 +17,27 @@ public sealed record ActionSpec(ActionKind Kind, string Argument = "")
         ActionKind.Listen => "Listen",
         _ => Kind.ToString(),
     };
+
+    public string LocalizedTitle(string? lang = null)
+    {
+        if (lang?.Equals("hi", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return Kind switch
+            {
+                ActionKind.Style => Catalog.StyleLabel(Argument, "hi"),
+                ActionKind.Improve => "सुधारें और बेहतर बनाएं (Improve)",
+                ActionKind.Fix => "सिर्फ गलतियाँ ठीक करें (Fix errors)",
+                ActionKind.Summary => $"समरी ({Argument}%)",
+                ActionKind.Explain => $"समझाएं ({Catalog.LevelLabel(Argument, "hi")})",
+                ActionKind.Translate => $"{Argument} में अनुवाद (Translate)",
+                ActionKind.Chat => "बातचीत (Chat)",
+                ActionKind.Listen => "बोलकर सुनाएं (Listen)",
+                _ => Kind.ToString(),
+            };
+        }
+
+        return Title;
+    }
 }
 
 public static class Catalog
@@ -34,23 +55,23 @@ public static class Catalog
     public static readonly IReadOnlyDictionary<string, string> HindiStyles =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Informal"] = "अनौपचारिक (Informal)",
-            ["Friendly"] = "मैत्रीपूर्ण (Friendly)",
-            ["Simple"] = "सरल (Simple)",
-            ["Formal"] = "औपचारिक (Formal)",
-            ["Professional"] = "व्यावसायिक (Professional)",
-            ["Argumentative"] = "तर्कपूर्ण (Argumentative)",
-            ["Persuasive"] = "प्रेरक (Persuasive)",
-            ["Creative"] = "रचनात्मक (Creative)",
-            ["Technical"] = "तकनीकी (Technical)",
-            ["Academic"] = "अकादमिक (Academic)",
-            ["Journalistic"] = "पत्रकारिता (Journalistic)",
-            ["Humorous"] = "हास्यपूर्ण (Humorous)",
-            ["Narrative"] = "कथात्मक (Narrative)",
-            ["Descriptive"] = "वर्णनात्मक (Descriptive)",
-            ["Expository"] = "व्याख्यात्मक (Expository)",
-            ["Poetic"] = "काव्यात्मक (Poetic)",
-            ["Satirical"] = "व्यंग्यात्मक (Satirical)",
+            ["Informal"] = "कैजुअल / अनौपचारिक (Informal)",
+            ["Friendly"] = "दोस्ताना (Friendly)",
+            ["Simple"] = "आसान / सरल (Simple)",
+            ["Formal"] = "फॉर्मल / औपचारिक (Formal)",
+            ["Professional"] = "कामकाजी / प्रोफेशनल (Professional)",
+            ["Argumentative"] = "दलीलों वाला (Argumentative)",
+            ["Persuasive"] = "असरदार / मनाने वाला (Persuasive)",
+            ["Creative"] = "क्रिएटिव / अनोखा (Creative)",
+            ["Technical"] = "टेक्निकल / तकनीकी (Technical)",
+            ["Academic"] = "पढ़ाई-लिखाई जैसा (Academic)",
+            ["Journalistic"] = "अख़बार जैसा (Journalistic)",
+            ["Humorous"] = "मज़ाकिया (Humorous)",
+            ["Narrative"] = "कहानी की तरह (Narrative)",
+            ["Descriptive"] = "विस्तार से बताने वाला (Descriptive)",
+            ["Expository"] = "खोलकर समझाने वाला (Expository)",
+            ["Poetic"] = "शायराना / काव्यात्मक (Poetic)",
+            ["Satirical"] = "तंजिया / मज़ाकिया कटाक्ष (Satirical)",
         };
 
     public static readonly int[] SummaryPercents = { 70, 50, 30 };
@@ -66,10 +87,10 @@ public static class Catalog
     public static readonly IReadOnlyDictionary<string, (string Label, string Description)> HindiLevels =
         new Dictionary<string, (string Label, string Description)>(StringComparer.OrdinalIgnoreCase)
         {
-            ["none"] = ("कोई पूर्व ज्ञान नहीं (None)", "विषय का कोई पूर्व ज्ञान नहीं; सरल दैनिक शब्दों, छोटे वाक्यों और सरल उदाहरणों का उपयोग करें"),
-            ["basic"] = ("बुनियादी (Basic)", "मूलभूत विचारों को जानता है; गैर-दैनिक भाषा वाले किसी भी शब्द को संक्षेप में परिभाषित करें"),
-            ["intermediate"] = ("मध्यम (Intermediate)", "बुनियादी बातों से परिचित; मानक शब्दावली ठीक है"),
-            ["advanced"] = ("उन्नत (Advanced)", "विषय से गहरा परिचय; तकनीकी भाषा और सूक्ष्मताओं का स्वागत है"),
+            ["none"] = ("शुरुआती (None)", "विषय की कोई पहले से जानकारी नहीं है; आम बोलचाल के आसान शब्दों, छोटे वाक्यों और सीधे उदाहरणों से समझाएं"),
+            ["basic"] = ("बेसिक (Basic)", "बुनियादी बातें मालूम हैं; जो शब्द आम बोलचाल के न हों, उनका आसान मतलब संक्षेप में बता दें"),
+            ["intermediate"] = ("सामान्य (Intermediate)", "ज़रूरी बातें अच्छी तरह पता हैं; सामान्य शब्दों में बात रख सकते हैं"),
+            ["advanced"] = ("गहरा जानकार (Advanced)", "विषय की बहुत अच्छी समझ है; तकनीकी शब्दों और बारीकियों का खुलकर इस्तेमाल करें"),
         };
 
     public static string StyleLabel(string style, string? lang = null)

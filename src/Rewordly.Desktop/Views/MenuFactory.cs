@@ -22,30 +22,38 @@ internal static class MenuFactory
             return i;
         }
 
+        var lang = s.PromptLanguage;
+        bool isHi = lang.Equals("hi", StringComparison.OrdinalIgnoreCase);
+
         int words = TextUtil.CountWords(text);
-        items.Add(new MenuItem { Header = $"Rewordly  ·  {AppController.Display(s.Active.Model)}  ·  {words} word{(words == 1 ? "" : "s")}", IsEnabled = false });
+        var wordCountDisplay = isHi ? $"{words} शब्द ({words} word{(words == 1 ? "" : "s")})" : $"{words} word{(words == 1 ? "" : "s")}";
+        items.Add(new MenuItem { Header = $"Rewordly  ·  {AppController.Display(s.Active.Model)}  ·  {wordCountDisplay}", IsEnabled = false });
         items.Add(new Separator());
 
         if (s.RecentStyles.Count > 0)
         {
-            foreach (var r in s.RecentStyles) items.Add(Act(r, new ActionSpec(ActionKind.Style, r)));
+            foreach (var r in s.RecentStyles) items.Add(Act(Catalog.StyleLabel(r, lang), new ActionSpec(ActionKind.Style, r)));
             items.Add(new Separator());
         }
 
         foreach (var st in Catalog.MainStyles.Where(x => !s.RecentStyles.Contains(x, StringComparer.OrdinalIgnoreCase)))
-            items.Add(Act(st, new ActionSpec(ActionKind.Style, st)));
+            items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
 
-        var other = new MenuItem { Header = "Other styles" };
-        foreach (var st in Catalog.OtherStyles) other.Items.Add(Act(st, new ActionSpec(ActionKind.Style, st)));
+        var other = new MenuItem { Header = isHi ? "अन्य स्टाइल (Other styles)" : "Other styles" };
+        foreach (var st in Catalog.OtherStyles) other.Items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
         items.Add(other);
 
         // My styles
-        var mine = new MenuItem { Header = "My styles" };
-        var add = new MenuItem { Header = "Add a style…" };
+        var mine = new MenuItem { Header = isHi ? "मेरे बनाए स्टाइल (My styles)" : "My styles" };
+        var add = new MenuItem { Header = isHi ? "नया स्टाइल जोड़ें… (Add a style…)" : "Add a style…" };
         add.Click += async (_, _) =>
         {
             menu.Close();
-            var name = await Dialog.InputAsync("Add a style", "Describe the style (for example \"LinkedIn post\" or \"polite customer reply\"):", AppSettings.MaxCustomStyleLength);
+            var title = isHi ? "नया स्टाइल जोड़ें" : "Add a style";
+            var promptMsg = isHi
+                ? "स्टाइल कैसा होना चाहिए? (जैसे \"लिंक्डइन पोस्ट\" या \"ग्राहक को विनम्र जवाब\"):"
+                : "Describe the style (for example \"LinkedIn post\" or \"polite customer reply\"):";
+            var name = await Dialog.InputAsync(title, promptMsg, AppSettings.MaxCustomStyleLength);
             if (name == null) return;
             var err = s.AddCustomStyle(name);
             if (err != null) { await Dialog.InfoAsync("Rewordly", err); return; }
@@ -60,13 +68,14 @@ internal static class MenuFactory
             {
                 var style = cs;
                 var item = Act(style, new ActionSpec(ActionKind.Style, style));
-                ToolTip.SetTip(item, "Right-click to delete");
+                ToolTip.SetTip(item, isHi ? "हटाने के लिए राइट-क्लिक करें" : "Right-click to delete");
                 item.AddHandler(InputElement.PointerPressedEvent, async (object? sender, PointerPressedEventArgs e) =>
                 {
                     if (!e.GetCurrentPoint(item).Properties.IsRightButtonPressed) return;
                     e.Handled = true;
                     menu.Close();
-                    if (await Dialog.AskAsync("Rewordly", $"Delete the style \"{style}\"?"))
+                    var confirmMsg = isHi ? $"क्या आप स्टाइल \"{style}\" को हटाना चाहते हैं?" : $"Delete the style \"{style}\"?";
+                    if (await Dialog.AskAsync("Rewordly", confirmMsg))
                     {
                         s.RemoveCustomStyle(style);
                         app.SaveSettings();
@@ -78,29 +87,34 @@ internal static class MenuFactory
         items.Add(mine);
         items.Add(new Separator());
 
-        items.Add(Act("Correct and improve", new ActionSpec(ActionKind.Improve)));
-        items.Add(Act("Fix errors only", new ActionSpec(ActionKind.Fix)));
+        items.Add(Act(isHi ? "सुधारें और बेहतर बनाएं (Improve)" : "Correct and improve", new ActionSpec(ActionKind.Improve)));
+        items.Add(Act(isHi ? "सिर्फ गलतियाँ ठीक करें (Fix errors)" : "Fix errors only", new ActionSpec(ActionKind.Fix)));
 
-        var sum = new MenuItem { Header = "Summary" };
+        var sum = new MenuItem { Header = isHi ? "समरी (Summary)" : "Summary" };
         foreach (var p in Catalog.SummaryPercents)
-            sum.Items.Add(Act($"Up to {p}% of the length (~{TextUtil.SummaryWordLimit(text, p)} words)", new ActionSpec(ActionKind.Summary, p.ToString())));
+        {
+            var summaryLabel = isHi
+                ? $"लगभग {p}% लंबाई तक (~{TextUtil.SummaryWordLimit(text, p)} शब्द)"
+                : $"Up to {p}% of the length (~{TextUtil.SummaryWordLimit(text, p)} words)";
+            sum.Items.Add(Act(summaryLabel, new ActionSpec(ActionKind.Summary, p.ToString())));
+        }
         items.Add(sum);
 
-        var exp = new MenuItem { Header = "Explain" };
-        exp.Items.Add(new MenuItem { Header = "Reader's knowledge level:", IsEnabled = false });
-        foreach (var l in Catalog.Levels) exp.Items.Add(Act(l.Label, new ActionSpec(ActionKind.Explain, l.Id)));
+        var exp = new MenuItem { Header = isHi ? "समझाएं (Explain)" : "Explain" };
+        exp.Items.Add(new MenuItem { Header = isHi ? "पढ़ने वाले की समझ का स्तर:" : "Reader's knowledge level:", IsEnabled = false });
+        foreach (var l in Catalog.Levels) exp.Items.Add(Act(Catalog.LevelLabel(l.Id, lang), new ActionSpec(ActionKind.Explain, l.Id)));
         items.Add(exp);
 
-        var tr = new MenuItem { Header = "Translate into" };
-        foreach (var c in TranslateItems(app, lang => app.Run(new ActionSpec(ActionKind.Translate, lang), text, target), menu.Close)) tr.Items.Add(c);
+        var tr = new MenuItem { Header = isHi ? "अनुवाद करें (Translate into)" : "Translate into" };
+        foreach (var c in TranslateItems(app, langChoice => app.Run(new ActionSpec(ActionKind.Translate, langChoice), text, target), menu.Close)) tr.Items.Add(c);
         items.Add(tr);
         items.Add(new Separator());
 
-        items.Add(Act("Chat…", new ActionSpec(ActionKind.Chat)));
-        items.Add(Act("Listen", new ActionSpec(ActionKind.Listen)));
+        items.Add(Act(isHi ? "बातचीत (Chat…)" : "Chat…", new ActionSpec(ActionKind.Chat)));
+        items.Add(Act(isHi ? "बोलकर सुनाएं (Listen)" : "Listen", new ActionSpec(ActionKind.Listen)));
         items.Add(new Separator());
         items.Add(ModelMenu(app, menu.Close));
-        var cancel = new MenuItem { Header = "Cancel" };
+        var cancel = new MenuItem { Header = isHi ? "रद्द करें (Cancel)" : "Cancel" };
         cancel.Click += (_, _) => menu.Close();
         items.Add(cancel);
 
@@ -112,6 +126,7 @@ internal static class MenuFactory
     public static List<Control> TranslateItems(AppController app, Action<string> onPick, Action? close = null)
     {
         var s = app.Settings;
+        var isHi = s.PromptLanguage.Equals("hi", StringComparison.OrdinalIgnoreCase);
         var list = new List<Control>();
         MenuItem Lang(string lang)
         {
@@ -125,14 +140,18 @@ internal static class MenuFactory
             list.Add(new Separator());
         }
         foreach (var l in Catalog.MainLanguages) list.Add(Lang(l));
-        var more = new MenuItem { Header = "Other languages" };
+        var more = new MenuItem { Header = isHi ? "अन्य भाषाएँ (Other languages)" : "Other languages" };
         foreach (var l in Catalog.OtherLanguages.Concat(s.ExtraLanguages).Distinct(StringComparer.OrdinalIgnoreCase)) more.Items.Add(Lang(l));
         list.Add(more);
-        var custom = new MenuItem { Header = "Another language…" };
+        var custom = new MenuItem { Header = isHi ? "कोई दूसरी भाषा… (Another language…)" : "Another language…" };
         custom.Click += async (_, _) =>
         {
             close?.Invoke();
-            var lang = await Dialog.InputAsync("Translate", "Target language (for example \"Hinglish\", \"Bhojpuri\", \"Brazilian Portuguese\"):", 40);
+            var title = isHi ? "अनुवाद" : "Translate";
+            var promptMsg = isHi
+                ? "किस भाषा में अनुवाद करना है? (जैसे \"Hinglish\", \"Bhojpuri\", \"Brazilian Portuguese\"):"
+                : "Target language (for example \"Hinglish\", \"Bhojpuri\", \"Brazilian Portuguese\"):";
+            var lang = await Dialog.InputAsync(title, promptMsg, 40);
             if (string.IsNullOrWhiteSpace(lang)) return;
             if (!Catalog.AllLanguages.Contains(lang, StringComparer.OrdinalIgnoreCase) && !s.ExtraLanguages.Contains(lang, StringComparer.OrdinalIgnoreCase))
             {

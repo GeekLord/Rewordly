@@ -83,13 +83,52 @@ public class PromptTests
     [InlineData("fr", "Réécris le texte suivant dans le style")]
     [InlineData("de", "Schreibe den folgenden Text im Stil von")]
     [InlineData("en", "Rewrite the following text in")]
-    [InlineData("hi", "निम्नलिखित पाठ को")]
+    [InlineData("hi", "नीचे दिए गए टेक्स्ट को")]
     public void Multilingual_style_defaults(string lang, string expectedPrefix)
     {
         var s = new AppSettings { PromptLanguage = lang };
         var p = Prompts.Build(s, new ActionSpec(ActionKind.Style, "Formal"), "demo");
         Assert.StartsWith(expectedPrefix, p.User);
-        if (lang == "hi") Assert.Contains("औपचारिक (Formal)", p.User);
+        if (lang == "hi") Assert.Contains("फॉर्मल / औपचारिक (Formal)", p.User);
+    }
+
+    [Fact]
+    public void Hindi_spoken_prompts_and_titles_build_accurately()
+    {
+        var s = new AppSettings { PromptLanguage = "hi" };
+
+        var improve = Prompts.Build(s, new ActionSpec(ActionKind.Improve), "नमूना टेक्स्ट");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट को सुधारकर दोबारा लिखें।", improve.User);
+        Assert.EndsWith("नमूना टेक्स्ट", improve.User);
+        Assert.Contains("मददगार और समझदार राइटिंग असिस्टेंट", improve.System);
+
+        var fix = Prompts.Build(s, new ActionSpec(ActionKind.Fix), "नमूना टेक्स्ट");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट को हूबहू वैसा ही रखें", fix.User);
+
+        var summary = Prompts.Build(s, new ActionSpec(ActionKind.Summary, "50"), "एक दो तीन चार पाँच छह");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट को छोटा करके दोबारा लिखें।", summary.User);
+        Assert.Contains("छोटी समरी", summary.User);
+
+        var explain = Prompts.Build(s, new ActionSpec(ActionKind.Explain, "none"), "तकनीक");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट को आसान और सीधी भाषा में समझाएं।", explain.User);
+        Assert.Contains("शुरुआती (None)", explain.User);
+
+        var translate = Prompts.Build(s, new ActionSpec(ActionKind.Translate, "English"), "नमस्ते");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट का English भाषा में अनुवाद करें।", translate.User);
+
+        var retranslate = Prompts.BuildRetranslate(s, "Hindi", "Hello");
+        Assert.StartsWith("नीचे दिए गए टेक्स्ट का Hindi भाषा में अनुवाद करें।", retranslate.User);
+
+        var chat = Prompts.BuildChat(s, "मुझे एक विचार दो", "संदर्भ");
+        Assert.Contains("मददगार असिस्टेंट", chat.System);
+        Assert.Contains("<text>\nसंदर्भ\n</text>", chat.User);
+
+        var actImprove = new ActionSpec(ActionKind.Improve);
+        Assert.Equal("सुधारें और बेहतर बनाएं (Improve)", actImprove.LocalizedTitle("hi"));
+        Assert.Equal("Correct and improve", actImprove.LocalizedTitle("en"));
+
+        var actExplain = new ActionSpec(ActionKind.Explain, "basic");
+        Assert.Equal("समझाएं (बेसिक (Basic))", actExplain.LocalizedTitle("hi"));
     }
 
     [Fact]
