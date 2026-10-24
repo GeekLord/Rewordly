@@ -1,0 +1,84 @@
+name: Bug Report
+description: Report a defect or unexpected behavior in Rewordly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue. Please complete this form with accurate technical details.
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Select your operating system.
+      options:
+        - Windows 11 (x64)
+        - Windows 11 (ARM64)
+        - Windows 10 (x64)
+        - macOS (Apple Silicon M1-M4)
+        - macOS (Intel x64)
+        - Linux (X11, x64)
+        - Linux (X11, ARM64)
+        - Linux (Wayland session)
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI Provider
+      description: Select the active AI provider in Settings.
+      options:
+        - Google Gemini
+        - OpenAI
+        - OpenRouter
+        - Groq
+        - Ollama (Local)
+        - Custom OpenAI-compatible
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Rewordly Version
+      description: Enter the Rewordly version (for example, 2.0.0).
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: Describe the problem clearly.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: List the numbered steps to reproduce the problem.
+      placeholder: |
+        1. Select text in an application.
+        2. Press the copy shortcut twice.
+        3. Select a menu action.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: State what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: State what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Log Output
+      description: Paste relevant entries from error.log if available. Do not include API keys or private data.
+      render: text

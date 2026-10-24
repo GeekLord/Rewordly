@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Rewordly</string>
+  <key>CFBundleDisplayName</key><string>Rewordly</string>
+  <key>CFBundleIdentifier</key><string>com.rewordly.app</string>
+  <key>CFBundleExecutable</key><string>Rewordly</string>
+  <key>CFBundleIconFile</key><string>Rewordly.icns</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleVersion</key><string>2.0.0</string>
+  <key>CFBundleShortVersionString</key><string>2.0.0</string>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSAppleEventsUsageDescription</key><string>Rewordly sends Copy and Paste to the app you are working in.</string>
+</dict>
+</plist>

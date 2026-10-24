@@ -1,0 +1,26 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Force LF line endings for shell scripts and plist
+*.sh text eol=lf
+*.desktop text eol=lf
+*.plist text eol=lf
+
+# Force CRLF for Windows specific files if needed
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# C# source files
+*.cs text diff=csharp
+*.csproj text merge=union
+*.sln text eol=crlf
+
+# Binary files
+*.png binary
+*.ico binary
+*.icns binary
+*.dll binary
+*.dylib binary
+*.so binary
+*.exe binary

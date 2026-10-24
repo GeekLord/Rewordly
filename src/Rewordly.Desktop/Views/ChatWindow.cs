@@ -1,0 +1,92 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Rewordly.Core;
+using Rewordly.Desktop.Platform;
+
+namespace Rewordly.Desktop.Views;
+
+/// <summary>Free-form instruction + selected text, with optional conversation memory.</summary>
+internal sealed class ChatWindow : Window
+{
+    private readonly AppController _app = AppController.Instance;
+    private readonly WindowFocus.Target _target;
+    private readonly TextBox _instruction, _text, _reply;
+    private readonly Button _send;
+    private readonly CheckBox _keep;
+    private readonly TextBlock _status;
+    private readonly List<(string Q, string A)> _history = new();
+
+    public ChatWindow(string selectedText, WindowFocus.Target target)
+    {
+        _target = target;
+        Ui.Prepare(this, "Rewordly – Chat", 780, 620);
+        Topmost = true;
+
+        _instruction = new TextBox
+        {
+            AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Height = 70, FontSize = 14,
+            Watermark = "What should the AI do? e.g. \"Reply to this email politely and say I'll call tomorrow\"",
+        };
+        _text = Ui.Area(TextUtil.NormalizeBlankLines(selectedText), readOnly: false);
+        _reply = Ui.Area("", readOnly: false);
+
+        _send = Ui.Btn($"Send  ({Os.ModLabel}+Enter)", SendAsync, primary: true);
+        var paste = Ui.Btn("Paste and replace", PasteAsync);
+        paste.IsEnabled = !target.IsEmpty;
+        var copy = Ui.Btn("Copy reply", async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Copied"; } });
+        var useReply = Ui.Btn("Use reply as text", () => { _text.Text = _reply.Text; _reply.Text = ""; });
+        var listen = Ui.Btn("Listen", () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
+        _keep = new CheckBox { Content = "Remember conversation", Margin = new Thickness(0, 0, 12, 6) };
+        _keep.IsCheckedChanged += (_, _) => { if (_keep.IsChecked != true) _history.Clear(); };
+        _status = Ui.Text(AppController.Display(_app.Settings.Active.Model), muted: true);
+
+        var root = Ui.Rows("Auto,Auto,Auto,2*,Auto,3*,Auto",
+            Ui.Text("Instruction", bold: true), _instruction,
+            Ui.Text("Text (optional)", bold: true), _text,
+            Ui.Text("Reply", bold: true), _reply,
+            Ui.Row(_send, paste, copy, useReply, listen, _keep, _status));
+        root.Margin = new Thickness(12);
+        Content = root;
+
+        AddHandler(KeyDownEvent, (object? _, KeyEventArgs e) =>
+        {
+            if (Ui.Mod(e) && e.Key == Key.Enter) { e.Handled = true; _ = SendAsync(); }
+            else if (e.Key == Key.Escape) Close();
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        Opened += (_, _) => _instruction.Focus();
+    }
+
+    private async Task SendAsync()
+    {
+        var instruction = (_instruction.Text ?? "").Trim();
+        var text = _text.Text ?? "";
+        if (instruction.Length == 0 && text.Trim().Length == 0) { _instruction.Focus(); return; }
+        if (instruction.Length == 0) instruction = "Respond to the text.";
+
+        var prompt = Prompts.BuildChat(_app.Settings, instruction, text);
+        if (_keep.IsChecked == true && _history.Count > 0)
+        {
+            var past = string.Join("\n\n", _history.Select((h, i) => $"[Earlier request {i + 1}]\n{h.Q}\n[Your earlier reply {i + 1}]\n{h.A}"));
+            prompt = prompt with { User = $"Conversation so far:\n\n{past}\n\n[New request]\n{prompt.User}" };
+        }
+        _send.IsEnabled = false;
+        try
+        {
+            var r = await _app.RunWithBusyAsync(prompt, "Chat");
+            if (r == null) return;
+            var answer = TextUtil.CleanModelOutput(r.Text);
+            _reply.Text = answer;
+            _status.Text = $"{r.Model} · {r.Elapsed.TotalSeconds:0.0}s";
+            if (_keep.IsChecked == true) _history.Add((prompt.User, answer));
+        }
+        finally { _send.IsEnabled = true; Activate(); }
+    }
+
+    private async Task PasteAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_reply.Text)) return;
+        await _app.PasteIntoAsync(_target, _reply.Text, hideFirst: this);
+        Close();
+    }
+}

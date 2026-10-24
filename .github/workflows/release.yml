@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v2.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip tar
+
+      - name: Install Apple Code Signing Tool (rcodesign)
+        run: |
+          RCODESIGN_VER="0.29.0"
+          curl -fsSL -o rcodesign.tar.gz "https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F${RCODESIGN_VER}/apple-codesign-${RCODESIGN_VER}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf rcodesign.tar.gz
+          sudo mv "apple-codesign-${RCODESIGN_VER}-x86_64-unknown-linux-musl/rcodesign" /usr/local/bin/
+          rm -rf rcodesign.tar.gz "apple-codesign-${RCODESIGN_VER}-x86_64-unknown-linux-musl"
+          rcodesign --version
+
+      - name: Run unit tests
+        run: dotnet test tests/Rewordly.Tests/Rewordly.Tests.csproj --configuration Release --verbosity normal
+
+      - name: Determine version
+        id: get_version
+        run: |
+          RAW_TAG="${{ github.event.inputs.tag_name }}"
+          if [ -z "$RAW_TAG" ]; then
+            RAW_TAG="${{ github.ref_name }}"
+          fi
+          VERSION="${RAW_TAG#v}"
+          if [ -z "$VERSION" ]; then
+            VERSION="2.0.0"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "TAG_NAME=$RAW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish all targets
+        run: |
+          chmod +x packaging/publish.sh packaging/package.sh
+          ./packaging/publish.sh
+
+      - name: Package all releases
+        run: |
+          ./packaging/package.sh "${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+          name: Rewordly ${{ steps.get_version.outputs.VERSION }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/SHA256SUMS.txt

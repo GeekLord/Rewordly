@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Rewordly
+Comment=Rewrite, fix, summarise, translate and read aloud selected text in any app
+Exec=Rewordly
+Icon=rewordly
+Terminal=false
+Categories=Utility;TextTools;
+StartupNotify=false
