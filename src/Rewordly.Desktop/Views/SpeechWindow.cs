@@ -25,10 +25,10 @@ internal sealed class SpeechWindow : Window
         _box = Ui.Area(TextUtil.NormalizeBlankLines(text), readOnly: true);
         _voices = new ComboBox { MinWidth = 300, Margin = new Thickness(0, 0, 8, 6) };
         _rate = new Slider { Minimum = -5, Maximum = 5, Value = 0, Width = 160, TickFrequency = 1, IsSnapToTickEnabled = true, Margin = new Thickness(0, 0, 12, 0) };
-        _play = Ui.Btn("Play", PlayPause, primary: true);
-        var stop = Ui.Btn("Stop", Stop);
+        _play = Ui.Btn("Play", PlayPause, primary: true, icon: "Play");
+        var stop = Ui.Btn("Stop", Stop, icon: "Stop", hue: "Muted");
         _info = Ui.Text("", muted: true);
-        var more = Ui.Btn("Get more voices", () => { if (_tts.MoreVoicesLink != null) Os.Open(_tts.MoreVoicesLink); else _info.Text = _tts.MoreVoicesHint; });
+        var more = Ui.Btn("Get more voices", icon: "PersonVoice", hue: "Teal", onClick: () => { if (_tts.MoreVoicesLink != null) Os.Open(_tts.MoreVoicesLink); else _info.Text = _tts.MoreVoicesHint; });
         ToolTip.SetTip(more, _tts.MoreVoicesHint);
 
         IReadOnlyList<Voice> voices = Array.Empty<Voice>();
@@ -55,8 +55,8 @@ internal sealed class SpeechWindow : Window
             Ui.Row(_play, stop, Ui.Text("Voice:", muted: true), _voices),
             Ui.Row(Ui.Text("Speed:", muted: true), _rate, speed, more),
             Ui.Row(Ui.Hint($"Speech engine: {_tts.EngineName}"), _info));
-        root.Margin = new Thickness(12);
-        Content = root;
+        root.Margin = new Thickness(14, 12);
+        Content = Ui.Framed(Ui.Header("Listen", "Read the text aloud with your computer's own voices (offline)", "Speaker2", compact: true), root);
 
         AddHandler(KeyDownEvent, (object? _, KeyEventArgs e) =>
         {
@@ -76,14 +76,16 @@ internal sealed class SpeechWindow : Window
                 var s = _tts.Speak(_box.Text ?? "", _voices.SelectedItem as Voice, (int)_rate.Value);
                 s.Completed += () => Dispatcher.UIThread.Post(Finished);
                 s.Progress += (pos, len) => Dispatcher.UIThread.Post(() => Highlight(pos, len));
-                _speaking = s; _paused = false; _play.Content = _tts.CanPause ? "Pause" : "Playing…";
+                _speaking = s; _paused = false; SetPlay(_tts.CanPause ? "Pause" : "Playing…", _tts.CanPause ? "Pause" : "Speaker2");
             }
             else if (!_tts.CanPause) return;
-            else if (_paused) { _speaking.Resume(); _paused = false; _play.Content = "Pause"; }
-            else { _speaking.Pause(); _paused = true; _play.Content = "Resume"; }
+            else if (_paused) { _speaking.Resume(); _paused = false; SetPlay("Pause", "Pause"); }
+            else { _speaking.Pause(); _paused = true; SetPlay("Resume", "Play"); }
         }
         catch (Exception ex) { Log.Error("tts", ex); _info.Text = "Could not start speech: " + ex.Message; _speaking = null; }
     }
+
+    private void SetPlay(string text, string icon) => _play.Content = Ui.BtnContent(text, icon, null);
 
     private void Stop()
     {
@@ -93,7 +95,7 @@ internal sealed class SpeechWindow : Window
 
     private void Finished()
     {
-        _speaking = null; _paused = false; _play.Content = "Play";
+        _speaking = null; _paused = false; SetPlay("Play", "Play");
         _box.SelectionStart = _box.SelectionEnd = 0;
     }
 

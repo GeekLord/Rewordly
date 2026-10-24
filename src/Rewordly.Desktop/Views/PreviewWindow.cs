@@ -39,17 +39,13 @@ internal sealed class PreviewWindow : Window
         ShowOriginal = new CheckBox { Content = "Show original", Margin = new Thickness(0, 0, 12, 6) };
         ShowOriginal.IsCheckedChanged += (_, _) => Original.IsVisible = ShowOriginal.IsChecked == true;
 
-        PasteButton = Ui.Btn("Paste and replace", PasteAsync, primary: true);
-        CopyButton = Ui.Btn("Copy", CopyAsync);
-        RegenButton = Ui.Btn("Regenerate", RegenerateAsync);
-        Status = Ui.Text($"{info.Elapsed.TotalSeconds:0.0}s · {info.Model}", muted: true);
-        Status.Margin = new Thickness(0, 0, 0, 4);
-        Status.FontSize = 12;
-
+        PasteButton = Ui.Btn("Paste and replace", PasteAsync, primary: true, icon: "ClipboardPaste");
+        CopyButton = Ui.Btn("Copy", CopyAsync, icon: "Copy", hue: "Blue");
+        RegenButton = Ui.Btn("Regenerate", RegenerateAsync, icon: "ArrowClockwise", hue: "Violet");
         var flyout = new MenuFlyout();
         flyout.ItemsSource = MenuFactory.TranslateItems(_app, lang => _ = TranslateAsync(lang), () => flyout.Hide());
-        TranslateButton = new DropDownButton { Content = "Translate result", Flyout = flyout, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
-        BackButton = Ui.Btn("Undo translation", () => { Result.Text = _baseResult; BackButton!.IsVisible = false; Status.Text = "Showing the untranslated result"; });
+        TranslateButton = new DropDownButton { Content = Ui.BtnContent("Translate result", "Translate", "Teal"), Flyout = flyout, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        BackButton = Ui.Btn("Undo translation", icon: "ArrowUndo", hue: "Muted", onClick: () => { Result.Text = _baseResult; BackButton!.IsVisible = false; Status.Text = "Showing the untranslated result"; });
         BackButton.IsVisible = false;
         ToolTip.SetTip(BackButton, "Go back to the result before it was translated.");
 
@@ -59,7 +55,7 @@ internal sealed class PreviewWindow : Window
         var listenOrig = new MenuItem { Header = "Original text" };
         listenOrig.Click += (_, _) => Ui.ShowFocused(new SpeechWindow(_original));
         listenMenu.ItemsSource = new List<Control> { listenRes, listenOrig };
-        ListenButton = new DropDownButton { Content = "Listen", Flyout = listenMenu, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        ListenButton = new DropDownButton { Content = Ui.BtnContent("Listen", "Speaker2", "Teal"), Flyout = listenMenu, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
         ToolTip.SetTip(ListenButton, "Read the result or the original aloud.");
 
         var cfg = _app.Settings.Active;
@@ -71,6 +67,9 @@ internal sealed class PreviewWindow : Window
         ToolTip.SetTip(PasteButton, $"Paste into the window you copied from, replacing the selection ({m}+Enter). Click into another window first to paste there instead.");
         ToolTip.SetTip(CopyButton, "Copy the result to the clipboard without pasting it.");
         ToolTip.SetTip(RegenButton, $"Ask the AI again with the model chosen below ({m}+R).");
+        Status = Ui.Text($"{info.Elapsed.TotalSeconds:0.0}s · {info.Model}", muted: true);
+        Status.Margin = new Thickness(0, 0, 0, 4);
+        Status.FontSize = 12;
 
         var originalLabel = Ui.Label("Original");
         originalLabel.Margin = new Thickness(0, 0, 0, 4);
@@ -96,8 +95,8 @@ internal sealed class PreviewWindow : Window
         var keys = Ui.Hint($"{m}+Enter paste and replace  ·  {m}+R regenerate  ·  Esc close");
         keys.Margin = new Thickness(0, 2, 0, 0);
         var root = Ui.Rows("*,Auto,Auto,Auto", texts, top, bottom, keys);
-        root.Margin = new Thickness(12);
-        Content = root;
+        root.Margin = new Thickness(14, 12);
+        Content = Ui.Framed(Ui.Header(action.Title, "Review the result, edit it if you like, then paste it back", HeaderIcon(action.Kind), compact: true), root);
 
         AddHandler(KeyDownEvent, (object? _, KeyEventArgs e) =>
         {
@@ -109,6 +108,18 @@ internal sealed class PreviewWindow : Window
         Opened += (_, _) => { Result.Focus(); Result.CaretIndex = 0; };
     }
 
+    internal static string HeaderIcon(ActionKind k) => k switch
+    {
+        ActionKind.Improve => "TextGrammarWand",
+        ActionKind.Fix => "TextGrammarCheckmark",
+        ActionKind.Summary => "TextBulletListSquare",
+        ActionKind.Explain => "Lightbulb",
+        ActionKind.Translate => "Translate",
+        ActionKind.Chat => "ChatSparkle",
+        ActionKind.Listen => "Speaker2",
+        _ => "PenSparkle",
+    };
+
     private string ChosenModel => ModelBox.SelectedItem as string ?? _app.Settings.Active.Model;
 
     // If the user clicks into another window, paste there and keep this window open.
@@ -119,7 +130,7 @@ internal sealed class PreviewWindow : Window
         if (fg.IsEmpty || WindowFocus.IsOwn(fg) || fg == _target) return;
         _pasteTarget = fg;
         _keepOpenAfterPaste = true;
-        PasteButton.Content = "Paste into other window";
+        Ui.SetLabel(PasteButton, "Paste into other window");
         ToolTip.SetTip(PasteButton, "Paste into the window you last clicked. Rewordly stays open so you can paste again.");
     }
 

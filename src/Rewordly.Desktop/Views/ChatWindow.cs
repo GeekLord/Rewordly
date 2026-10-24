@@ -31,17 +31,17 @@ internal sealed class ChatWindow : Window
         _text = Ui.Area(TextUtil.NormalizeBlankLines(selectedText), readOnly: false);
         _reply = Ui.Area("", readOnly: false);
 
-        _send = Ui.Btn($"Send  ({Os.ModLabel}+Enter)", SendAsync, primary: true);
-        var paste = Ui.Btn("Paste and replace", PasteAsync);
+        _send = Ui.Btn($"Send  ({Os.ModLabel}+Enter)", SendAsync, primary: true, icon: "Send");
+        var paste = Ui.Btn("Paste and replace", PasteAsync, icon: "ClipboardPaste");
         paste.IsEnabled = !target.IsEmpty;
         ToolTip.SetTip(paste, target.IsEmpty
             ? "Not available here: Chat was opened without selected text. Use Copy reply instead."
             : "Paste the reply into the window you copied from, replacing the selection.");
         ToolTip.SetShowOnDisabled(paste, true);
-        var copy = Ui.Btn("Copy reply", async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Reply copied to the clipboard"; } });
-        var useReply = Ui.Btn("Move reply into Text", () => { _text.Text = _reply.Text; _reply.Text = ""; _instruction.Focus(); });
+        var copy = Ui.Btn("Copy reply", icon: "Copy", hue: "Blue", onClick: async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Reply copied to the clipboard"; } });
+        var useReply = Ui.Btn("Move reply into Text", icon: "ArrowUndo", hue: "Violet", onClick: () => { _text.Text = _reply.Text; _reply.Text = ""; _instruction.Focus(); });
         ToolTip.SetTip(useReply, "Replace the text above with this reply, so your next instruction works on it.");
-        var listen = Ui.Btn("Listen", () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
+        var listen = Ui.Btn("Listen", icon: "Speaker2", hue: "Teal", onClick: () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
         _keep = new CheckBox { Content = "Remember earlier messages", Margin = new Thickness(4, 0, 12, 6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         ToolTip.SetTip(_keep, "Include your earlier instructions and replies in each new request. Turn off to start fresh.");
         _keep.IsCheckedChanged += (_, _) => { if (_keep.IsChecked != true) _history.Clear(); };
@@ -61,8 +61,8 @@ internal sealed class ChatWindow : Window
             sendRow,
             Ui.Split(replyLabel, _status), _reply,
             Ui.Row(paste, copy, useReply, listen));
-        root.Margin = new Thickness(12);
-        Content = root;
+        root.Margin = new Thickness(14, 12);
+        Content = Ui.Framed(Ui.Header("Chat", "Tell the AI what to do with your text, or ask anything", "ChatSparkle", compact: true), root);
 
         AddHandler(KeyDownEvent, (object? _, KeyEventArgs e) =>
         {

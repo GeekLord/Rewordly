@@ -29,7 +29,7 @@ internal sealed class SettingsWindow : Window
         _app = app;
         _work = Clone(app.Settings);
         _provider = ProviderPresets.Get(_work.ActiveProvider).Id;
-        Ui.Prepare(this, "Rewordly – Settings", 760, 640);
+        Ui.Prepare(this, "Rewordly – Settings", 760, 720);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         // ---------------------------------------------------------------- AI model tab
@@ -39,15 +39,15 @@ internal sealed class SettingsWindow : Window
         ApiKey = new TextBox { MinWidth = 420, PasswordChar = '•' };
         ShowKey = new CheckBox { Content = "Show", Margin = new Thickness(8, 0, 0, 0) };
         ShowKey.IsCheckedChanged += (_, _) => ApiKey.PasswordChar = ShowKey.IsChecked == true ? '\0' : '•';
-        var getKey = Ui.Btn("Get a key", () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
+        var getKey = Ui.Btn("Get a key", icon: "Key", hue: "Violet", onClick: () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
         ToolTip.SetTip(getKey, "Opens the provider's page where you can create an API key.");
         KeyInfo = Ui.Hint("");
         Model = new TextBox { MinWidth = 420 };
         ModelList = new ComboBox { MinWidth = 280, PlaceholderText = "Pick from available models", Margin = new Thickness(0, 0, 8, 6) };
         ModelList.SelectionChanged += (_, _) => { if (ModelList.SelectedItem is string m) Model.Text = m; };
-        var refresh = Ui.Btn("Refresh list", RefreshModelsAsync);
+        var refresh = Ui.Btn("Refresh list", RefreshModelsAsync, icon: "ArrowSync", hue: "Blue");
         ToolTip.SetTip(refresh, "Load the models this provider offers for your key.");
-        var test = Ui.Btn("Test connection", TestAsync);
+        var test = Ui.Btn("Test connection", TestAsync, icon: "PlugConnected", hue: "Green");
         ToolTip.SetTip(test, "Send a tiny request with the provider, key and model above (nothing is saved).");
         TestStatus = Ui.Hint("");
         DefaultTemp = new CheckBox { Content = "Use the model's default temperature", Margin = new Thickness(0, 0, 12, 0) };
@@ -68,7 +68,7 @@ internal sealed class SettingsWindow : Window
         ApiKey.Margin = new Thickness(0, 0, 0, 6);
         Advanced = new Expander
         {
-            Header = "Advanced: API address, temperature, timeout",
+            Header = Ui.TabHeader("Advanced: API address, temperature, timeout", "Settings", "Muted"),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Margin = new Thickness(0, 16, 0, 0),
             Content = new StackPanel
@@ -83,15 +83,15 @@ internal sealed class SettingsWindow : Window
                 },
             },
         };
-        var providerHead = Ui.Section("Provider");
+        var providerHead = Ui.Section("Provider", "PlugConnected", "Indigo");
         providerHead.Margin = new Thickness(0, 0, 0, 2);
         var ai = new StackPanel
         {
             Children =
             {
                 providerHead, ProviderBox, ProviderNotes,
-                Ui.Section("API key"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
-                Ui.Section("Model"), Model, Ui.Row(ModelList, refresh),
+                Ui.Section("API key", "Key", "Violet"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
+                Ui.Section("Model", "BrainCircuit", "Blue"), Model, Ui.Row(ModelList, refresh),
                 Ui.Hint("Type a model name, or click Refresh list and pick one."),
                 Ui.Row(test), TestStatus,
                 Advanced,
@@ -110,7 +110,7 @@ internal sealed class SettingsWindow : Window
         var interval = Ui.Row(Ui.Text("Time allowed between the two presses:"), WindowMs, Unit("ms"));
         interval.Margin = new Thickness(28, 0, 0, 4);
         DoubleCopy.IsCheckedChanged += (_, _) => interval.IsEnabled = DoubleCopy.IsChecked == true;
-        var shortcutsHead = Ui.Section("Opening the menu");
+        var shortcutsHead = Ui.Section("Opening the menu", "Keyboard", "Indigo");
         shortcutsHead.Margin = new Thickness(0, 0, 0, 6);
         var platformNote = Os.IsWayland
             ? "Wayland session detected: system-wide shortcuts only work in X11/XWayland apps."
@@ -123,11 +123,11 @@ internal sealed class SettingsWindow : Window
                 shortcutsHead,
                 DoubleCopy, interval,
                 AltShortcut,
-                Ui.Section("Clipboard"), RestoreClip,
-                Ui.Section("Selection limit"),
+                Ui.Section("Clipboard", "Clipboard", "Teal"), RestoreClip,
+                Ui.Section("Selection limit", "TextWordCount", "Blue"),
                 Ui.Row(Ui.Text("Maximum words per selection:"), MaxWords),
                 Ui.Hint("Longer selections are not sent to the AI; Rewordly shows a message instead."),
-                Ui.Section("Appearance and startup"),
+                Ui.Section("Appearance and startup", "PaintBrush", "Violet"),
                 Ui.Row(Ui.Text("Theme:"), ThemeBox),
                 StartAtLogin,
             },
@@ -164,7 +164,7 @@ internal sealed class SettingsWindow : Window
             _work.PromptLanguage = langs[PromptLanguageBox.SelectedIndex];
             PromptEditor.Text = Prompts.Template(_work, _promptKey);
         };
-        var reset = Ui.Btn("Reset to default", () =>
+        var reset = Ui.Btn("Reset to default", icon: "ArrowUndo", hue: "Muted", onClick: () =>
         {
             _work.PromptOverrides.Remove(_promptKey);
             PromptEditor.Text = Prompts.GetDefault(_promptKey, _work.PromptLanguage);
@@ -186,16 +186,40 @@ internal sealed class SettingsWindow : Window
         };
 
         // ---------------------------------------------------------------- about tab
+        var brand = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*") };
+        var logo = Ui.Logo(64);
+        logo.Margin = new Thickness(0, 0, 16, 0);
+        var brandText = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                Ui.Text("Rewordly 2.0.0", bold: true, size: 20),
+                Ui.Text("Rewrite, fix, summarise, explain, translate, chat about and listen to any selected text, in any app, on Windows, macOS and Linux.", muted: true),
+            },
+        };
+        Grid.SetColumn(brandText, 1);
+        brand.Children.Add(logo);
+        brand.Children.Add(brandText);
+        Control Fact(string icon, string hue, string text)
+        {
+            var t = Ui.Text(text);
+            var r = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 2), Children = { Ui.Chip(icon, hue, 28), t } };
+            return r;
+        }
         var about = new StackPanel
         {
             Spacing = 6,
             Children =
             {
-                Ui.Text("Rewordly 2.0.0", bold: true, size: 18),
-                Ui.Text("Rewrite, fix, summarise, explain, translate, chat about and listen to any selected text, in any app, on Windows, macOS and Linux."),
-                Ui.Text($"System: {Os.Name}{(Os.IsWayland ? " (Wayland)" : "")} · Speech: {_app.Tts.EngineName} · Key storage: {_app.Secrets.Backend}", muted: true),
-                Ui.Text($"Settings folder: {_app.Store.Folder}", muted: true),
-                Ui.Row(Ui.Btn("Open settings folder", () => { Directory.CreateDirectory(_app.Store.Folder); Os.Open(_app.Store.Folder); }), Ui.Btn("Quick guide", _app.ShowGuide)),
+                Ui.Card(brand, 18),
+                Ui.Section("This computer", "Window", "Blue"),
+                Fact("Window", "Blue", $"System: {Os.Name}{(Os.IsWayland ? " (Wayland)" : "")}"),
+                Fact("Speaker2", "Teal", $"Speech: {_app.Tts.EngineName}"),
+                Fact("LockClosed", "Violet", $"Key storage: {_app.Secrets.Backend}"),
+                Fact("FolderOpen", "Indigo", $"Settings folder: {_app.Store.Folder}"),
+                Ui.Row(Ui.Btn("Open settings folder", () => { Directory.CreateDirectory(_app.Store.Folder); Os.Open(_app.Store.Folder); }, icon: "FolderOpen"), Ui.Btn("Quick guide", _app.ShowGuide, icon: "BookOpen", hue: "Teal")),
+                Ui.Section("Privacy", "ShieldLock", "Green"),
                 Ui.Text("Your text is sent only to the AI provider you choose. Nothing is sent anywhere else.", muted: true),
             },
         };
@@ -206,16 +230,16 @@ internal sealed class SettingsWindow : Window
             Padding = new Thickness(8, 0),
             ItemsSource = new[]
             {
-                new TabItem { FontSize = 16, Header = "AI model", Content = Pad(ai) },
-                new TabItem { FontSize = 16, Header = "Shortcuts & behaviour", Content = Pad(behaviour) },
-                new TabItem { FontSize = 16, Header = "Prompts", Content = Pad(prompts) },
-                new TabItem { FontSize = 16, Header = "About", Content = Pad(about) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("AI model", "BrainCircuit", "Indigo"), Content = Pad(ai) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("Shortcuts & behaviour", "Keyboard", "Violet"), Content = Pad(behaviour) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("Prompts", "TextDescription", "Blue"), Content = Pad(prompts) },
+                new TabItem { FontSize = 15, Header = Ui.TabHeader("About", "Info", "Teal"), Content = Pad(about) },
             },
         };
-        var save = Ui.Btn("Save", SaveAndClose, primary: true);
+        var save = Ui.Btn("Save", SaveAndClose, primary: true, icon: "CheckmarkCircle");
         var cancel = Ui.Btn("Cancel", Close);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12, 4, 4, 8), Children = { save, cancel } };
-        Content = Ui.Rows("*,Auto", tabs, buttons);
+        Content = Ui.Framed(Ui.Header("Settings", "Choose your AI provider and model, shortcuts and prompts", "Settings"), Ui.Rows("*,Auto", tabs, buttons));
 
         LoadAll();
         interval.IsEnabled = DoubleCopy.IsChecked == true;

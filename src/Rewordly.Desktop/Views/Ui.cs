@@ -31,24 +31,125 @@ internal static class Ui
 
     public static WindowIcon Icon => _icon ??= new WindowIcon(new MemoryStream(IconPng));
 
-    public static Button Btn(string text, Action onClick, bool primary = false)
+    public static Button Btn(string text, Action onClick, bool primary = false, string? icon = null, string hue = "Indigo")
     {
-        var b = new Button { Content = text, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
-        if (primary) b.Classes.Add("accent");
+        var b = MakeBtn(text, primary, icon, hue);
         b.Click += (_, _) => onClick();
         return b;
     }
 
-    public static Button Btn(string text, Func<Task> onClick, bool primary = false)
+    public static Button Btn(string text, Func<Task> onClick, bool primary = false, string? icon = null, string hue = "Indigo")
     {
-        var b = new Button { Content = text, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
-        if (primary) b.Classes.Add("accent");
+        var b = MakeBtn(text, primary, icon, hue);
         b.Click += async (_, _) =>
         {
             try { await onClick(); }
             catch (Exception ex) { Log.Error("ui", ex); await Dialog.InfoAsync("Rewordly", ex.Message); }
         };
         return b;
+    }
+
+    private static Button MakeBtn(string text, bool primary, string? icon, string hue)
+    {
+        var b = new Button { Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(icon != null ? 10 : 14, 6, 14, 6) };
+        if (primary) b.Classes.Add("accent");
+        b.Content = BtnContent(text, icon, primary ? null : hue);
+        return b;
+    }
+
+    /// <summary>Icon + label for any button-like control. A null hue makes the icon follow the text colour.</summary>
+    public static object BtnContent(string text, string? icon, string? hue = "Indigo")
+    {
+        if (icon == null) return text;
+        return new StackPanel
+        {
+            Orientation = Orientation.Horizontal, Spacing = 7,
+            Children = { Glyph(icon, 16, hue), new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center } },
+        };
+    }
+
+    /// <summary>Change a button's text and keep its icon.</summary>
+    public static void SetLabel(ContentControl b, string text)
+    {
+        if (b.Content is StackPanel sp && sp.Children.OfType<TextBlock>().FirstOrDefault() is { } t) t.Text = text;
+        else b.Content = text;
+    }
+
+    /// <summary>A line icon (Fluent UI System Icons). Hue is a key from Theme.Hues; null follows the text colour.</summary>
+    public static PathIcon Glyph(string name, double size = 16, string? hue = "Indigo")
+    {
+        var p = new PathIcon { Data = StreamGeometry.Parse(Icons.Paths[name]), Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center };
+        if (hue != null) p.Bind(PathIcon.ForegroundProperty, p.GetResourceObservable("Hue." + hue));
+        return p;
+    }
+
+    /// <summary>Icon on a soft tinted square, used next to section headings.</summary>
+    public static Border Chip(string icon, string hue, double size = 28)
+    {
+        var b = new Border
+        {
+            Width = size, Height = size, CornerRadius = new CornerRadius(size * 0.28),
+            Child = Glyph(icon, size * 0.6, hue), VerticalAlignment = VerticalAlignment.Center,
+        };
+        b.Bind(Border.BackgroundProperty, b.GetResourceObservable("Chip." + hue));
+        return b;
+    }
+
+    /// <summary>The app icon as an image.</summary>
+    public static Image Logo(double size) => new()
+    {
+        Source = new Avalonia.Media.Imaging.Bitmap(new MemoryStream(IconPng)), Width = size, Height = size,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    /// <summary>Brand gradient band at the top of a window: icon, title and one line of context.</summary>
+    public static Control Header(string title, string subtitle, string? icon = null, bool compact = false)
+    {
+        Control lead = icon == null
+            ? new Border
+            {
+                Padding = new Thickness(4), CornerRadius = new CornerRadius(12),
+                Background = new SolidColorBrush(Color.FromArgb(0x40, 255, 255, 255)), Child = Logo(compact ? 26 : 36),
+            }
+            : new Border
+            {
+                Width = compact ? 32 : 40, Height = compact ? 32 : 40, CornerRadius = new CornerRadius(10),
+                Background = new SolidColorBrush(Color.FromArgb(0x33, 255, 255, 255)),
+                Child = new PathIcon { Data = StreamGeometry.Parse(Icons.Paths[icon]), Width = compact ? 18 : 22, Height = compact ? 18 : 22, Foreground = Brushes.White },
+            };
+        var sub = new TextBlock { Text = subtitle, FontSize = 12.5, Foreground = Brushes.White, Opacity = 0.92, TextWrapping = TextWrapping.Wrap, IsVisible = subtitle.Length > 0 };
+        var text = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0),
+            Children = { new TextBlock { Text = title, FontSize = compact ? 15 : 18, FontWeight = FontWeight.SemiBold, Foreground = Brushes.White, TextTrimming = TextTrimming.CharacterEllipsis }, sub },
+        };
+        var row = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*") };
+        Grid.SetColumn(text, 1);
+        row.Children.Add(lead);
+        row.Children.Add(text);
+        // Large faint sparkle on the right echoes the "AI writing" idea without competing with the text.
+        var motif = new PathIcon
+        {
+            Data = StreamGeometry.Parse(Icons.Paths["Sparkle"]), Width = compact ? 64 : 84, Height = compact ? 64 : 84,
+            Foreground = Brushes.White, Opacity = 0.13, HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -30, 18, -30), IsHitTestVisible = false,
+        };
+        return new Border
+        {
+            Background = Theme.HeaderBrush(), ClipToBounds = true,
+            Padding = compact ? new Thickness(16, 10) : new Thickness(20, 16),
+            Child = new Panel { Children = { motif, row } },
+        };
+    }
+
+    /// <summary>Header band on top, window content below.</summary>
+    public static DockPanel Framed(Control header, Control body)
+    {
+        var d = new DockPanel();
+        DockPanel.SetDock(header, Dock.Top);
+        d.Children.Add(header);
+        d.Children.Add(body);
+        return d;
     }
 
     public static TextBlock Text(string text, bool muted = false, bool bold = false, double size = 0) => new()
@@ -63,10 +164,22 @@ internal static class Ui
     };
 
     /// <summary>Group heading inside a window: more space above than below so groups read as separate.</summary>
-    public static TextBlock Section(string text) => new()
+    public static Control Section(string text, string? icon = null, string hue = "Indigo")
     {
-        Text = text, FontSize = 15, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
-        Margin = new Thickness(0, 18, 0, 2),
+        var t = new TextBlock { Text = text, FontSize = 15, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        if (icon == null) { t.Margin = new Thickness(0, 18, 0, 2); return t; }
+        return new StackPanel
+        {
+            Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 18, 0, 4),
+            Children = { Chip(icon, hue, 28), t },
+        };
+    }
+
+    /// <summary>Tab header with an icon.</summary>
+    public static object TabHeader(string text, string icon, string hue) => new StackPanel
+    {
+        Orientation = Orientation.Horizontal, Spacing = 8,
+        Children = { Glyph(icon, 18, hue), new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center } },
     };
 
     /// <summary>Label sitting directly above the control it names.</summary>
@@ -159,11 +272,14 @@ internal static class Ui
         Dispatcher.UIThread.Post(() => w.Activate(), DispatcherPriority.Background);
     }
 
-    public static Border Card(Control child) => new()
+    /// <summary>White (light) or raised (dark) surface with a hairline border.</summary>
+    public static Border Card(Control child, double padding = 14)
     {
-        Child = child, Padding = new Thickness(2), CornerRadius = new CornerRadius(6),
-        BorderThickness = new Thickness(1), BorderBrush = new SolidColorBrush(Color.FromArgb(60, 128, 128, 128)),
-    };
+        var b = new Border { Child = child, Padding = new Thickness(padding), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1) };
+        b.Bind(Border.BackgroundProperty, b.GetResourceObservable("Rw.CardBackground"));
+        b.Bind(Border.BorderBrushProperty, b.GetResourceObservable("Rw.CardBorder"));
+        return b;
+    }
 }
 
 /// <summary>Simple modal-style dialogs that work without an owner window.</summary>
@@ -180,13 +296,27 @@ internal static class Dialog
         return w;
     }
 
+    /// <summary>Message with an icon chip on its left.</summary>
+    private static Control Message(string message, string icon, string hue)
+    {
+        var chip = Ui.Chip(icon, hue, 36);
+        chip.VerticalAlignment = VerticalAlignment.Top;
+        chip.Margin = new Thickness(0, 2, 12, 0);
+        var g = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*") };
+        var t = Ui.Text(message);
+        Grid.SetColumn(t, 1);
+        g.Children.Add(chip);
+        g.Children.Add(t);
+        return g;
+    }
+
     public static Task InfoAsync(string title, string message)
     {
         var tcs = new TaskCompletionSource();
         Window? w = null;
         var ok = Ui.Btn("OK", () => w!.Close(), primary: true);
         ok.IsDefault = true; ok.IsCancel = true;
-        var panel = new StackPanel { Spacing = 10, Children = { Ui.Text(message), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok } } } };
+        var panel = new StackPanel { Spacing = 10, Children = { Message(message, "Info", "Indigo"), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok } } } };
         w = Make(title, panel);
         w.Closed += (_, _) => tcs.TrySetResult();
         Ui.ShowFocused(w);
@@ -201,7 +331,7 @@ internal static class Dialog
         var y = Ui.Btn(yes, () => { result = true; w!.Close(); }, primary: true);
         var n = Ui.Btn(no, () => w!.Close());
         y.IsDefault = true; n.IsCancel = true;
-        var panel = new StackPanel { Spacing = 10, Children = { Ui.Text(message), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { y, n } } } };
+        var panel = new StackPanel { Spacing = 10, Children = { Message(message, "Warning", "Amber"), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { y, n } } } };
         w = Make(title, panel);
         w.Closed += (_, _) => tcs.TrySetResult(result);
         Ui.ShowFocused(w);
@@ -217,7 +347,7 @@ internal static class Dialog
         var ok = Ui.Btn("OK", () => { result = box.Text?.Trim(); w!.Close(); }, primary: true);
         var cancel = Ui.Btn("Cancel", () => w!.Close());
         ok.IsDefault = true; cancel.IsCancel = true;
-        var panel = new StackPanel { Spacing = 10, Children = { Ui.Text(prompt), box, new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok, cancel } } } };
+        var panel = new StackPanel { Spacing = 10, Children = { Message(prompt, "Edit", "Violet"), box, new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok, cancel } } } };
         w = Make(title, panel, 480);
         w.Opened += (_, _) => box.Focus();
         w.Closed += (_, _) => tcs.TrySetResult(string.IsNullOrWhiteSpace(result) ? null : result);
@@ -240,20 +370,27 @@ internal sealed class Toast : Window
         ShowActivated = false;
         Width = 360;
         SizeToContent = SizeToContent.Height;
-        Content = new Border
+        Control lead = warning ? Ui.Chip("Warning", "Amber", 32) : Ui.Logo(32);
+        lead.VerticalAlignment = VerticalAlignment.Top;
+        lead.Margin = new Thickness(0, 1, 12, 0);
+        var body = new StackPanel
         {
-            Padding = new Thickness(14, 10),
-            BorderThickness = new Thickness(0, 0, 0, 0),
-            Child = new StackPanel
+            Spacing = 2,
+            Children =
             {
-                Spacing = 2,
-                Children =
-                {
-                    new TextBlock { Text = warning ? "Rewordly – attention" : "Rewordly", FontWeight = FontWeight.SemiBold, Foreground = warning ? Brushes.OrangeRed : null },
-                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                },
+                new TextBlock { Text = warning ? "Rewordly – attention" : "Rewordly", FontWeight = FontWeight.SemiBold },
+                new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 },
             },
         };
+        if (warning) ((TextBlock)body.Children[0]).Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("Hue.Amber"));
+        var row = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*") };
+        Grid.SetColumn(body, 1);
+        row.Children.Add(lead);
+        row.Children.Add(body);
+        var card = new Border { Padding = new Thickness(14, 12), BorderThickness = new Thickness(1), Child = row };
+        card.Bind(Border.BackgroundProperty, card.GetResourceObservable("Rw.CardBackground"));
+        card.Bind(Border.BorderBrushProperty, card.GetResourceObservable("Rw.CardBorder"));
+        Content = card;
         PointerPressed += (_, _) => Close();
     }
 
@@ -324,12 +461,20 @@ internal sealed class BusyWindow : Window
         var cancel = Ui.Btn("Cancel", onCancel);
         cancel.Margin = new Thickness(0);
         cancel.VerticalAlignment = VerticalAlignment.Center;
-        var grid = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("*,Auto"), Margin = new Thickness(14, 10) };
+        var grid = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*,Auto"), Margin = new Thickness(14, 10, 14, 8) };
+        var chip = Ui.Chip("Sparkle", "Indigo", 34);
+        chip.Margin = new Thickness(0, 0, 12, 0);
         var left = new StackPanel { Children = { Ui.Text(action + "…", bold: true), sub } };
-        Grid.SetColumn(cancel, 1);
+        left.Children[0].Margin = new Thickness(0, 0, 8, 0);
+        sub.Margin = new Thickness(0, 0, 8, 0);
+        sub.FontSize = 12;
+        Grid.SetColumn(left, 1);
+        Grid.SetColumn(cancel, 2);
+        grid.Children.Add(chip);
         grid.Children.Add(left);
         grid.Children.Add(cancel);
-        Content = grid;
+        var bar = new ProgressBar { IsIndeterminate = true, Height = 3, MinHeight = 3, CornerRadius = new CornerRadius(0), Margin = new Thickness(0) };
+        Content = Ui.Rows("Auto,Auto", grid, bar);
         KeyDown += (_, e) => { if (e.Key == Key.Escape) onCancel(); };
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Normal, (_, _) => sub.Text = $"{model}  ·  {(DateTime.Now - start).TotalSeconds:0}s");
         _timer.Start();
