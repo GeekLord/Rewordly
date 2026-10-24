@@ -21,6 +21,7 @@ internal sealed class SettingsWindow : Window
     internal readonly TextBlock ProviderNotes, KeyInfo, TestStatus;
     internal readonly CheckBox ShowKey, DefaultTemp, StartAtLogin, DoubleCopy, AltShortcut, RestoreClip;
     internal readonly NumericUpDown Temp, Timeout, WindowMs, MaxWords;
+    internal readonly Expander Advanced;
     private string _promptKey = Prompts.KeyStyle;
 
     public SettingsWindow(AppController app)
@@ -33,19 +34,22 @@ internal sealed class SettingsWindow : Window
 
         // ---------------------------------------------------------------- AI model tab
         ProviderBox = new ComboBox { ItemsSource = ProviderPresets.All.Select(p => p.Name).ToList(), MinWidth = 320 };
-        ProviderNotes = Ui.Text("", muted: true);
+        ProviderNotes = Ui.Hint("");
         BaseUrl = new TextBox { MinWidth = 420 };
         ApiKey = new TextBox { MinWidth = 420, PasswordChar = '•' };
         ShowKey = new CheckBox { Content = "Show", Margin = new Thickness(8, 0, 0, 0) };
         ShowKey.IsCheckedChanged += (_, _) => ApiKey.PasswordChar = ShowKey.IsChecked == true ? '\0' : '•';
         var getKey = Ui.Btn("Get a key", () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
-        KeyInfo = Ui.Text("", muted: true);
-        Model = new TextBox { MinWidth = 320 };
-        ModelList = new ComboBox { MinWidth = 260, PlaceholderText = "Available models (Refresh list)" };
+        ToolTip.SetTip(getKey, "Opens the provider's page where you can create an API key.");
+        KeyInfo = Ui.Hint("");
+        Model = new TextBox { MinWidth = 420 };
+        ModelList = new ComboBox { MinWidth = 280, PlaceholderText = "Pick from available models", Margin = new Thickness(0, 0, 8, 6) };
         ModelList.SelectionChanged += (_, _) => { if (ModelList.SelectedItem is string m) Model.Text = m; };
         var refresh = Ui.Btn("Refresh list", RefreshModelsAsync);
-        var test = Ui.Btn("Test", TestAsync);
-        TestStatus = Ui.Text("", muted: true);
+        ToolTip.SetTip(refresh, "Load the models this provider offers for your key.");
+        var test = Ui.Btn("Test connection", TestAsync);
+        ToolTip.SetTip(test, "Send a tiny request with the provider, key and model above (nothing is saved).");
+        TestStatus = Ui.Hint("");
         DefaultTemp = new CheckBox { Content = "Use the model's default temperature", Margin = new Thickness(0, 0, 12, 0) };
         Temp = new NumericUpDown { Minimum = 0, Maximum = 2, Increment = 0.1m, FormatString = "0.0", Width = 130 };
         DefaultTemp.IsCheckedChanged += (_, _) => Temp.IsEnabled = DefaultTemp.IsChecked != true;
@@ -59,19 +63,41 @@ internal sealed class SettingsWindow : Window
             LoadProviderFields();
         };
 
-        var ai = new StackPanel
+        ShowKey.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        ShowKey.Margin = new Thickness(8, 0, 8, 6);
+        ApiKey.Margin = new Thickness(0, 0, 0, 6);
+        Advanced = new Expander
         {
-            Spacing = 4,
-            Children =
+            Header = "Advanced: API address, temperature, timeout",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, 16, 0, 0),
+            Content = new StackPanel
             {
-                Ui.Text("Provider", bold: true), ProviderBox, ProviderNotes,
-                Ui.Text("API address", bold: true), BaseUrl,
-                Ui.Text("API key", bold: true), Ui.Row(ApiKey, ShowKey), Ui.Row(getKey), KeyInfo,
-                Ui.Text("Model", bold: true), Ui.Row(Model, ModelList), Ui.Row(refresh, test, TestStatus),
-                Ui.Text("Temperature", bold: true), Ui.Row(DefaultTemp, Temp),
-                Ui.Text("Timeout (seconds)", bold: true), Timeout,
+                Children =
+                {
+                    Ui.Label("API address"), BaseUrl,
+                    Ui.Hint("Change this only for your own server or a proxy. Leave the default otherwise."),
+                    Ui.Label("Temperature"), Ui.Row(DefaultTemp, Temp),
+                    Ui.Hint("Lower values give more predictable wording; higher values give more varied wording."),
+                    Ui.Label("Timeout"), Ui.Row(Timeout, Unit("seconds")),
+                },
             },
         };
+        var providerHead = Ui.Section("Provider");
+        providerHead.Margin = new Thickness(0, 0, 0, 2);
+        var ai = new StackPanel
+        {
+            Children =
+            {
+                providerHead, ProviderBox, ProviderNotes,
+                Ui.Section("API key"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
+                Ui.Section("Model"), Model, Ui.Row(ModelList, refresh),
+                Ui.Hint("Type a model name, or click Refresh list and pick one."),
+                Ui.Row(test), TestStatus,
+                Advanced,
+            },
+        };
+        ProviderNotes.Margin = new Thickness(0, 4, 0, 0);
 
         // ---------------------------------------------------------------- behaviour tab
         ThemeBox = new ComboBox { ItemsSource = new[] { "System", "Light", "Dark" }, Width = 160 };
@@ -81,25 +107,36 @@ internal sealed class SettingsWindow : Window
         AltShortcut = new CheckBox { Content = $"Also open the menu with {Os.AltShortcutLabel} (doesn't touch your clipboard)" };
         RestoreClip = new CheckBox { Content = "Put my previous clipboard back after copying and pasting" };
         MaxWords = new NumericUpDown { Minimum = 50, Maximum = 20000, Increment = 100, FormatString = "0", Width = 140 };
+        var interval = Ui.Row(Ui.Text("Time allowed between the two presses:"), WindowMs, Unit("ms"));
+        interval.Margin = new Thickness(28, 0, 0, 4);
+        DoubleCopy.IsCheckedChanged += (_, _) => interval.IsEnabled = DoubleCopy.IsChecked == true;
+        var shortcutsHead = Ui.Section("Opening the menu");
+        shortcutsHead.Margin = new Thickness(0, 0, 0, 6);
+        var platformNote = Os.IsWayland
+            ? "Wayland session detected: system-wide shortcuts only work in X11/XWayland apps."
+            : Os.IsMac ? "macOS: Rewordly must be allowed under Privacy & Security > Accessibility." : "";
         var behaviour = new StackPanel
         {
             Spacing = 6,
             Children =
             {
-                Ui.Text("Theme", bold: true), ThemeBox,
-                StartAtLogin, DoubleCopy,
-                Ui.Row(Ui.Text("Time allowed between the two presses (ms):"), WindowMs),
-                AltShortcut, RestoreClip,
+                shortcutsHead,
+                DoubleCopy, interval,
+                AltShortcut,
+                Ui.Section("Clipboard"), RestoreClip,
+                Ui.Section("Selection limit"),
                 Ui.Row(Ui.Text("Maximum words per selection:"), MaxWords),
-                Ui.Text(Os.IsWayland
-                    ? "Wayland session detected: system-wide shortcuts only work in X11/XWayland apps."
-                    : Os.IsMac ? "macOS: Rewordly must be allowed under Privacy & Security > Accessibility." : "", muted: true),
+                Ui.Hint("Longer selections are not sent to the AI; Rewordly shows a message instead."),
+                Ui.Section("Appearance and startup"),
+                Ui.Row(Ui.Text("Theme:"), ThemeBox),
+                StartAtLogin,
             },
         };
+        if (platformNote.Length > 0) behaviour.Children.Insert(1, Ui.Hint(platformNote));
 
         // ---------------------------------------------------------------- prompts tab
         var keys = Prompts.Labels.Keys.ToList();
-        PromptKeyBox = new ComboBox { ItemsSource = keys.Select(k => Prompts.Labels[k]).ToList(), MinWidth = 320 };
+        PromptKeyBox = new ComboBox { ItemsSource = keys.Select(k => Prompts.Labels[k]).ToList(), MinWidth = 320, Margin = new Thickness(0, 0, 8, 6) };
         var langLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["en"] = "English (en)",
@@ -132,14 +169,19 @@ internal sealed class SettingsWindow : Window
             _work.PromptOverrides.Remove(_promptKey);
             PromptEditor.Text = Prompts.GetDefault(_promptKey, _work.PromptLanguage);
         });
+        ToolTip.SetTip(reset, "Replace this prompt with Rewordly's built-in version.");
+        var promptsIntro = Ui.Hint("These are the instructions Rewordly sends to the AI for each action. Most people never need to change them.");
+        promptsIntro.Margin = new Thickness(0, 0, 0, 6);
         var prompts = new StackPanel
         {
-            Spacing = 6,
+            Spacing = 4,
             Children =
             {
+                promptsIntro,
                 Ui.Row(Ui.Text("Template language:"), PromptLanguageBox),
-                Ui.Text("Prompt", bold: true), PromptKeyBox, PromptEditor, Ui.Row(reset),
-                Ui.Text("Placeholders: {selectedText} or {text}, {selectedStyle}, {num}, {value}, {currentResultText}.", muted: true),
+                Ui.Label("Action"), Ui.Row(PromptKeyBox, reset),
+                Ui.Label("Prompt"), PromptEditor,
+                Ui.Hint("Placeholders: {selectedText} or {text}, {selectedStyle}, {num}, {value}, {currentResultText}."),
             },
         };
 
@@ -176,6 +218,14 @@ internal sealed class SettingsWindow : Window
         Content = Ui.Rows("*,Auto", tabs, buttons);
 
         LoadAll();
+        interval.IsEnabled = DoubleCopy.IsChecked == true;
+    }
+
+    private static TextBlock Unit(string text)
+    {
+        var t = Ui.Text(text, muted: true);
+        t.Margin = new Thickness(8, 0, 0, 0);
+        return t;
     }
 
     private static AppSettings Clone(AppSettings s)
@@ -221,12 +271,16 @@ internal sealed class SettingsWindow : Window
         BaseUrl.Watermark = p.DefaultBaseUrl.Length > 0 ? p.DefaultBaseUrl : "https://your-server/v1";
         ApiKey.Text = _pendingKeys.TryGetValue(_provider, out var pending) ? pending : _app.Store.HasStoredKey(_work, _provider) ? _app.Store.GetApiKey(_work, _provider) : "";
         var env = SettingsStore.EnvironmentKey(_provider) != null ? p.KeyEnvironmentVariables.First(v => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(v))) : null;
-        KeyInfo.Text = (p.NeedsKey ? "Required. " : "Not required. ") + $"Stored with: {_app.Secrets.Backend}." +
+        KeyInfo.Text = (p.NeedsKey ? "Required. " : "Not required. ") + $"Saved securely with: {_app.Secrets.Backend}." +
                        (env != null ? $" If left empty, the {env} environment variable is used." :
                         p.KeyEnvironmentVariables.Length > 0 ? $" You can also set {string.Join(" or ", p.KeyEnvironmentVariables)} instead." : "");
         Model.Text = cfg.Model.Length > 0 ? cfg.Model : p.DefaultModel;
         ModelList.ItemsSource = cfg.RecentModels.ToList();
+        Model.Watermark = p.DefaultModel.Length > 0 ? p.DefaultModel : "Model name";
         TestStatus.Text = "";
+        // Open Advanced when the address matters: a custom server, or an address changed from the default.
+        var customUrl = cfg.BaseUrl.Trim().TrimEnd('/');
+        if (p.Id == "custom" || (customUrl.Length > 0 && customUrl != p.DefaultBaseUrl)) Advanced.IsExpanded = true;
         _loading = was;
     }
 
@@ -275,16 +329,16 @@ internal sealed class SettingsWindow : Window
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var models = await FormClient().ListModelsAsync(cts.Token);
             ModelList.ItemsSource = models.ToList();
-            TestStatus.Text = $"{models.Count} models found. Pick one from the list.";
+            TestStatus.Text = models.Count > 0 ? $"{models.Count} models found. Pick one from the list." : "No models were returned. Type the model name yourself.";
             if (models.Count > 0) ModelList.IsDropDownOpen = true;
         }
-        catch (Exception ex) { TestStatus.Text = "Could not load models: " + ex.Message; }
+        catch (Exception ex) { TestStatus.Text = "Could not load models: " + ex.Message + " Check the API key and API address, or type the model name yourself."; }
     }
 
     private async Task TestAsync()
     {
-        if (string.IsNullOrWhiteSpace(Model.Text)) { TestStatus.Text = "Enter or pick a model first."; return; }
-        TestStatus.Text = "Testing…";
+        if (string.IsNullOrWhiteSpace(Model.Text)) { TestStatus.Text = "Type or pick a model first, then test again."; return; }
+        TestStatus.Text = "Testing the connection…";
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
@@ -292,7 +346,7 @@ internal sealed class SettingsWindow : Window
             var reply = r.Text.Trim();
             TestStatus.Text = $"Works. {r.Model} replied \"{(reply.Length > 40 ? reply[..40] + "…" : reply)}\" in {r.Elapsed.TotalSeconds:0.0}s.";
         }
-        catch (Exception ex) { TestStatus.Text = "Failed: " + ex.Message; }
+        catch (Exception ex) { TestStatus.Text = "Connection failed: " + ex.Message + " Check the API key, model name and API address."; }
     }
 
     private async Task SaveAndClose()
@@ -312,7 +366,7 @@ internal sealed class SettingsWindow : Window
         var active = _work.GetProvider(_provider);
         if (string.IsNullOrWhiteSpace(active.Model))
         {
-            await Dialog.InfoAsync("Rewordly", "Choose a model for the selected provider (type a name or use Refresh list).");
+            await Dialog.InfoAsync("Rewordly", "Choose a model for the selected provider: type its name, or click Refresh list and pick one.");
             return;
         }
         _work.ActiveProvider = _provider;

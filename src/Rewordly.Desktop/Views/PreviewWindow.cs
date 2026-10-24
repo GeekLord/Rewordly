@@ -21,7 +21,8 @@ internal sealed class PreviewWindow : Window
 
     internal readonly TextBox Original, Result;
     internal readonly CheckBox ShowOriginal;
-    internal readonly Button PasteButton, CopyButton, RegenButton, TranslateButton, BackButton;
+    internal readonly Button PasteButton, CopyButton, RegenButton, BackButton;
+    internal readonly DropDownButton TranslateButton, ListenButton;
     internal readonly ComboBox ModelBox;
     internal readonly TextBlock Status;
 
@@ -41,33 +42,60 @@ internal sealed class PreviewWindow : Window
         PasteButton = Ui.Btn("Paste and replace", PasteAsync, primary: true);
         CopyButton = Ui.Btn("Copy", CopyAsync);
         RegenButton = Ui.Btn("Regenerate", RegenerateAsync);
-        TranslateButton = Ui.Btn("Translate result ▾", () => { });
+        Status = Ui.Text($"{info.Elapsed.TotalSeconds:0.0}s · {info.Model}", muted: true);
+        Status.Margin = new Thickness(0, 0, 0, 4);
+        Status.FontSize = 12;
+
         var flyout = new MenuFlyout();
         flyout.ItemsSource = MenuFactory.TranslateItems(_app, lang => _ = TranslateAsync(lang), () => flyout.Hide());
-        TranslateButton.Flyout = flyout;
-        BackButton = Ui.Btn("Back to result", () => { Result.Text = _baseResult; BackButton!.IsVisible = false; });
+        TranslateButton = new DropDownButton { Content = "Translate result", Flyout = flyout, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        BackButton = Ui.Btn("Undo translation", () => { Result.Text = _baseResult; BackButton!.IsVisible = false; Status.Text = "Showing the untranslated result"; });
         BackButton.IsVisible = false;
-        var listenOrig = Ui.Btn("Listen: original", () => Ui.ShowFocused(new SpeechWindow(_original)));
-        var listenRes = Ui.Btn("Listen: result", () => Ui.ShowFocused(new SpeechWindow(Result.Text ?? "")));
+        ToolTip.SetTip(BackButton, "Go back to the result before it was translated.");
+
+        var listenMenu = new MenuFlyout();
+        var listenRes = new MenuItem { Header = "Result" };
+        listenRes.Click += (_, _) => Ui.ShowFocused(new SpeechWindow(Result.Text ?? ""));
+        var listenOrig = new MenuItem { Header = "Original text" };
+        listenOrig.Click += (_, _) => Ui.ShowFocused(new SpeechWindow(_original));
+        listenMenu.ItemsSource = new List<Control> { listenRes, listenOrig };
+        ListenButton = new DropDownButton { Content = "Listen", Flyout = listenMenu, Margin = new Thickness(0, 0, 8, 6), Padding = new Thickness(12, 5) };
+        ToolTip.SetTip(ListenButton, "Read the result or the original aloud.");
 
         var cfg = _app.Settings.Active;
-        ModelBox = new ComboBox { MinWidth = 220, Margin = new Thickness(0, 0, 8, 6) };
+        ModelBox = new ComboBox { MinWidth = 200, Margin = new Thickness(0, 0, 8, 6) };
         ModelBox.ItemsSource = new[] { cfg.Model }.Concat(cfg.RecentModels).Where(m => !string.IsNullOrWhiteSpace(m)).Distinct().ToList();
         ModelBox.SelectedIndex = 0;
         ToolTip.SetTip(ModelBox, "Model used by Regenerate and Translate result.");
-        ToolTip.SetTip(PasteButton, "Paste into the window you copied from, replacing the selection. Click into another window first to paste there instead.");
-        Status = Ui.Text($"{info.Elapsed.TotalSeconds:0.0}s", muted: true);
+        var m = Os.ModLabel;
+        ToolTip.SetTip(PasteButton, $"Paste into the window you copied from, replacing the selection ({m}+Enter). Click into another window first to paste there instead.");
+        ToolTip.SetTip(CopyButton, "Copy the result to the clipboard without pasting it.");
+        ToolTip.SetTip(RegenButton, $"Ask the AI again with the model chosen below ({m}+R).");
 
-        var texts = new Grid { RowDefinitions = RowDefinitions.Parse("Auto,*"), Margin = new Thickness(0, 0, 0, 4) };
-        Original.MaxHeight = 220;
-        Original.Margin = new Thickness(0, 0, 0, 8);
-        Grid.SetRow(Result, 1);
+        var originalLabel = Ui.Label("Original");
+        originalLabel.Margin = new Thickness(0, 0, 0, 4);
+        var resultLabel = Ui.Label("Result (you can edit it before pasting)");
+        resultLabel.Margin = new Thickness(0, 0, 0, 4);
+        var resultHead = Ui.Split(resultLabel, Status);
+        var texts = new Grid { RowDefinitions = RowDefinitions.Parse("Auto,Auto,Auto,*"), Margin = new Thickness(0, 0, 0, 6) };
+        Original.MaxHeight = 160;
+        Original.Margin = new Thickness(0, 0, 0, 12);
+        originalLabel.IsVisible = false;
+        ShowOriginal.IsCheckedChanged += (_, _) => originalLabel.IsVisible = ShowOriginal.IsChecked == true;
+        Grid.SetRow(Original, 1); Grid.SetRow(resultHead, 2); Grid.SetRow(Result, 3);
+        texts.Children.Add(originalLabel);
         texts.Children.Add(Original);
+        texts.Children.Add(resultHead);
         texts.Children.Add(Result);
 
+        // Primary row: what to do with the result. Secondary row: ways to change or inspect it.
         var top = Ui.Row(PasteButton, CopyButton, RegenButton, TranslateButton, BackButton);
-        var bottom = Ui.Row(ShowOriginal, listenOrig, listenRes, Ui.Text("Model:", muted: true), ModelBox, Status);
-        var root = Ui.Rows("*,Auto,Auto", texts, top, bottom);
+        var modelLabel = Ui.Text("Model for Regenerate and Translate:", muted: true);
+        modelLabel.FontSize = 12;
+        var bottom = Ui.Row(ShowOriginal, ListenButton, modelLabel, ModelBox);
+        var keys = Ui.Hint($"{m}+Enter paste and replace  ·  {m}+R regenerate  ·  Esc close");
+        keys.Margin = new Thickness(0, 2, 0, 0);
+        var root = Ui.Rows("*,Auto,Auto,Auto", texts, top, bottom, keys);
         root.Margin = new Thickness(12);
         Content = root;
 
@@ -91,7 +119,8 @@ internal sealed class PreviewWindow : Window
         if (fg.IsEmpty || WindowFocus.IsOwn(fg) || fg == _target) return;
         _pasteTarget = fg;
         _keepOpenAfterPaste = true;
-        PasteButton.Content = "Paste";
+        PasteButton.Content = "Paste into other window";
+        ToolTip.SetTip(PasteButton, "Paste into the window you last clicked. Rewordly stays open so you can paste again.");
     }
 
     private async Task PasteAsync()
@@ -106,7 +135,7 @@ internal sealed class PreviewWindow : Window
     {
         if (string.IsNullOrWhiteSpace(Result.Text)) return;
         await _app.Clipboard.SetTextAsync(Result.Text);
-        Status.Text = "Copied to clipboard";
+        Status.Text = "Copied to the clipboard";
     }
 
     private void SetBusy(bool busy)

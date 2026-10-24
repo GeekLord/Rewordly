@@ -292,7 +292,9 @@ internal sealed class AppController
             SaveSettings();
 
             var prompt = Prompts.Build(Settings, action, text);
-            var result = await RunWithBusyAsync(prompt, action.LocalizedTitle(Settings.PromptLanguage));
+            var title = action.LocalizedTitle(Settings.PromptLanguage);
+            if (action.Kind == ActionKind.Style && !Settings.PromptLanguage.Equals("hi", StringComparison.OrdinalIgnoreCase)) title = $"Rewriting in {title} style";
+            var result = await RunWithBusyAsync(prompt, title);
             if (result == null) return;
             Ui.ShowFocused(new PreviewWindow(action, text, TextUtil.CleanModelOutput(result.Text, text), prompt, target, result));
         }

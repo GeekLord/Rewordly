@@ -17,7 +17,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
-$Project = Join-Path $RepoRoot "src" "Rewordly.Desktop" "Rewordly.Desktop.csproj"
+$Project = Join-Path $RepoRoot "src\Rewordly.Desktop\Rewordly.Desktop.csproj"
 $PubDir = Join-Path $RepoRoot "pub"
 
 $env:DOTNET_NOLOGO = "1"

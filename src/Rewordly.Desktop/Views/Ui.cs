@@ -62,6 +62,39 @@ internal static class Ui
         Margin = new Thickness(0, 4, 8, 4),
     };
 
+    /// <summary>Group heading inside a window: more space above than below so groups read as separate.</summary>
+    public static TextBlock Section(string text) => new()
+    {
+        Text = text, FontSize = 15, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
+        Margin = new Thickness(0, 18, 0, 2),
+    };
+
+    /// <summary>Label sitting directly above the control it names.</summary>
+    public static TextBlock Label(string text) => new()
+    {
+        Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
+        Margin = new Thickness(0, 8, 0, 4),
+    };
+
+    /// <summary>Short helper text under a control.</summary>
+    public static TextBlock Hint(string text) => new()
+    {
+        Text = text, FontSize = 12, Opacity = 0.75, TextWrapping = TextWrapping.Wrap,
+        Margin = new Thickness(0, 2, 0, 2),
+    };
+
+    /// <summary>Label on the left, content on the right (used for a heading with a status next to it).</summary>
+    public static Grid Split(Control left, Control right)
+    {
+        var g = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("*,Auto") };
+        Grid.SetColumn(right, 1);
+        right.HorizontalAlignment = HorizontalAlignment.Right;
+        right.VerticalAlignment = VerticalAlignment.Bottom;
+        g.Children.Add(left);
+        g.Children.Add(right);
+        return g;
+    }
+
     public static TextBox Area(string text, bool readOnly) => new()
     {
         Text = text, IsReadOnly = readOnly, AcceptsReturn = true, AcceptsTab = false, TextWrapping = TextWrapping.Wrap,

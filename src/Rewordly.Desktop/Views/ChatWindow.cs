@@ -26,7 +26,7 @@ internal sealed class ChatWindow : Window
         _instruction = new TextBox
         {
             AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Height = 70, FontSize = 14,
-            Watermark = "What should the AI do? e.g. \"Reply to this email politely and say I'll call tomorrow\"",
+            Watermark = "For example: \"Reply to this email politely and say I'll call tomorrow\"",
         };
         _text = Ui.Area(TextUtil.NormalizeBlankLines(selectedText), readOnly: false);
         _reply = Ui.Area("", readOnly: false);
@@ -34,18 +34,33 @@ internal sealed class ChatWindow : Window
         _send = Ui.Btn($"Send  ({Os.ModLabel}+Enter)", SendAsync, primary: true);
         var paste = Ui.Btn("Paste and replace", PasteAsync);
         paste.IsEnabled = !target.IsEmpty;
-        var copy = Ui.Btn("Copy reply", async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Copied"; } });
-        var useReply = Ui.Btn("Use reply as text", () => { _text.Text = _reply.Text; _reply.Text = ""; });
+        ToolTip.SetTip(paste, target.IsEmpty
+            ? "Not available here: Chat was opened without selected text. Use Copy reply instead."
+            : "Paste the reply into the window you copied from, replacing the selection.");
+        ToolTip.SetShowOnDisabled(paste, true);
+        var copy = Ui.Btn("Copy reply", async () => { if (!string.IsNullOrEmpty(_reply.Text)) { await _app.Clipboard.SetTextAsync(_reply.Text); _status!.Text = "Reply copied to the clipboard"; } });
+        var useReply = Ui.Btn("Move reply into Text", () => { _text.Text = _reply.Text; _reply.Text = ""; _instruction.Focus(); });
+        ToolTip.SetTip(useReply, "Replace the text above with this reply, so your next instruction works on it.");
         var listen = Ui.Btn("Listen", () => { if (!string.IsNullOrEmpty(_reply.Text)) Ui.ShowFocused(new SpeechWindow(_reply.Text)); });
-        _keep = new CheckBox { Content = "Remember conversation", Margin = new Thickness(0, 0, 12, 6) };
+        _keep = new CheckBox { Content = "Remember earlier messages", Margin = new Thickness(4, 0, 12, 6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        ToolTip.SetTip(_keep, "Include your earlier instructions and replies in each new request. Turn off to start fresh.");
         _keep.IsCheckedChanged += (_, _) => { if (_keep.IsChecked != true) _history.Clear(); };
         _status = Ui.Text(AppController.Display(_app.Settings.Active.Model), muted: true);
+        _status.FontSize = 12;
+        _status.Margin = new Thickness(0, 0, 0, 4);
 
-        var root = Ui.Rows("Auto,Auto,Auto,2*,Auto,3*,Auto",
-            Ui.Text("Instruction", bold: true), _instruction,
-            Ui.Text("Text (optional)", bold: true), _text,
-            Ui.Text("Reply", bold: true), _reply,
-            Ui.Row(_send, paste, copy, useReply, listen, _keep, _status));
+        var instructionLabel = Ui.Label("What should the AI do?");
+        instructionLabel.Margin = new Thickness(0, 0, 0, 4);
+        var replyLabel = Ui.Label("Reply");
+        replyLabel.Margin = new Thickness(0, 14, 0, 4);
+        _status.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom;
+        var sendRow = Ui.Row(_send, _keep);
+        var root = Ui.Rows("Auto,Auto,Auto,2*,Auto,Auto,3*,Auto",
+            instructionLabel, _instruction,
+            Ui.Label("Text to work on (optional)"), _text,
+            sendRow,
+            Ui.Split(replyLabel, _status), _reply,
+            Ui.Row(paste, copy, useReply, listen));
         root.Margin = new Thickness(12);
         Content = root;
 
@@ -71,6 +86,7 @@ internal sealed class ChatWindow : Window
             prompt = prompt with { User = $"Conversation so far:\n\n{past}\n\n[New request]\n{prompt.User}" };
         }
         _send.IsEnabled = false;
+        _status.Text = "Waiting for the reply…";
         try
         {
             var r = await _app.RunWithBusyAsync(prompt, "Chat");
@@ -80,7 +96,12 @@ internal sealed class ChatWindow : Window
             _status.Text = $"{r.Model} · {r.Elapsed.TotalSeconds:0.0}s";
             if (_keep.IsChecked == true) _history.Add((prompt.User, answer));
         }
-        finally { _send.IsEnabled = true; Activate(); }
+        finally
+        {
+            _send.IsEnabled = true;
+            if (_status.Text == "Waiting for the reply…") _status.Text = AppController.Display(_app.Settings.Active.Model);
+            Activate();
+        }
     }
 
     private async Task PasteAsync()

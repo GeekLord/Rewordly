@@ -40,10 +40,21 @@ internal sealed class SpeechWindow : Window
         else if (voices.Count > 0) { _voices.SelectedIndex = 0; _info.Text = $"No voice for {culture} found; using {voices[0]}."; }
         if (voices.Count == 0) { _play.IsEnabled = false; _info.Text = _tts.MoreVoicesHint; }
 
+        var speed = Ui.Text("Normal", muted: true);
+        speed.MinWidth = 60;
+        _rate.PropertyChanged += (_, e) =>
+        {
+            if (e.Property != Slider.ValueProperty) return;
+            var v = (int)_rate.Value;
+            speed.Text = v == 0 ? "Normal" : v > 0 ? $"Faster (+{v})" : $"Slower ({v})";
+        };
+        ToolTip.SetTip(_rate, "Changes apply the next time you press Play.");
+        ToolTip.SetTip(_play, "Play or pause (Space).");
+        _box.Margin = new Thickness(0, 0, 0, 6);
         var root = Ui.Rows("*,Auto,Auto,Auto", _box,
             Ui.Row(_play, stop, Ui.Text("Voice:", muted: true), _voices),
-            Ui.Row(Ui.Text("Speed:", muted: true), _rate, more),
-            Ui.Row(Ui.Text(_tts.EngineName, muted: true), _info));
+            Ui.Row(Ui.Text("Speed:", muted: true), _rate, speed, more),
+            Ui.Row(Ui.Hint($"Speech engine: {_tts.EngineName}"), _info));
         root.Margin = new Thickness(12);
         Content = root;
 

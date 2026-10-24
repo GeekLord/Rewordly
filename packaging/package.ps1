@@ -16,11 +16,11 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 $PubDir = Join-Path $RepoRoot "pub"
 $DistDir = Join-Path $RepoRoot "dist"
-$AssetsDir = Join-Path $RepoRoot "src" "Rewordly.Desktop" "Assets"
+$AssetsDir = Join-Path $RepoRoot "src\Rewordly.Desktop\Assets"
 $PackagingDir = Join-Path $RepoRoot "packaging"
 $ReadmeFile = Join-Path $RepoRoot "README.md"
 $LicenseFile = Join-Path $RepoRoot "LICENSE"
-$Csproj = Join-Path $RepoRoot "src" "Rewordly.Desktop" "Rewordly.Desktop.csproj"
+$Csproj = Join-Path $RepoRoot "src\Rewordly.Desktop\Rewordly.Desktop.csproj"
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     if (Test-Path $Csproj) {
@@ -125,7 +125,7 @@ foreach ($target in @('linux-x64', 'linux-arm64')) {
 }
 
 # Generate SHA256 checksums
-$archives = Get-ChildItem -Path $DistDir -Include @("*.zip", "*.tar.gz") -File
+$archives = Get-ChildItem -Path (Join-Path $DistDir "*") -Include @("*.zip", "*.tar.gz") -File
 if ($archives.Count -gt 0) {
     Write-Host "==> Generating SHA256 checksums..." -ForegroundColor Cyan
     $hashFile = Join-Path $DistDir "SHA256SUMS.txt"

@@ -30,18 +30,22 @@ internal static class MenuFactory
         items.Add(new MenuItem { Header = $"Rewordly  ·  {AppController.Display(s.Active.Model)}  ·  {wordCountDisplay}", IsEnabled = false });
         items.Add(new Separator());
 
-        if (s.RecentStyles.Count > 0)
-        {
-            foreach (var r in s.RecentStyles) items.Add(Act(Catalog.StyleLabel(r, lang), new ActionSpec(ActionKind.Style, r)));
-            items.Add(new Separator());
-        }
+        // Proofreading first: the most common, no further choice needed.
+        items.Add(Act(isHi ? "सुधारें और बेहतर बनाएं (Improve)" : "Correct and improve", new ActionSpec(ActionKind.Improve)));
+        items.Add(Act(isHi ? "सिर्फ गलतियाँ ठीक करें (Fix errors)" : "Fix errors only", new ActionSpec(ActionKind.Fix)));
+        items.Add(new Separator());
 
-        foreach (var st in Catalog.MainStyles.Where(x => !s.RecentStyles.Contains(x, StringComparer.OrdinalIgnoreCase)))
-            items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
+        // Recently used styles stay one click away; every style lives in one submenu.
+        foreach (var r in s.RecentStyles) items.Add(Act(Catalog.StyleLabel(r, lang), new ActionSpec(ActionKind.Style, r)));
+
+        var styles = new MenuItem { Header = isHi ? "किसी स्टाइल में दोबारा लिखें (Rewrite in a style)" : "Rewrite in a style" };
+        foreach (var st in Catalog.MainStyles)
+            styles.Items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
+        styles.Items.Add(new Separator());
 
         var other = new MenuItem { Header = isHi ? "अन्य स्टाइल (Other styles)" : "Other styles" };
         foreach (var st in Catalog.OtherStyles) other.Items.Add(Act(Catalog.StyleLabel(st, lang), new ActionSpec(ActionKind.Style, st)));
-        items.Add(other);
+        styles.Items.Add(other);
 
         // My styles
         var mine = new MenuItem { Header = isHi ? "मेरे बनाए स्टाइल (My styles)" : "My styles" };
@@ -74,8 +78,8 @@ internal static class MenuFactory
                     if (!e.GetCurrentPoint(item).Properties.IsRightButtonPressed) return;
                     e.Handled = true;
                     menu.Close();
-                    var confirmMsg = isHi ? $"क्या आप स्टाइल \"{style}\" को हटाना चाहते हैं?" : $"Delete the style \"{style}\"?";
-                    if (await Dialog.AskAsync("Rewordly", confirmMsg))
+                    var confirmMsg = isHi ? $"क्या आप स्टाइल \"{style}\" को हटाना चाहते हैं?" : $"Delete the style \"{style}\"? This removes it from My styles.";
+                    if (await Dialog.AskAsync("Rewordly", confirmMsg, isHi ? "हटाएं (Delete)" : "Delete style", isHi ? "रहने दें (Keep)" : "Keep it"))
                     {
                         s.RemoveCustomStyle(style);
                         app.SaveSettings();
@@ -84,11 +88,9 @@ internal static class MenuFactory
                 mine.Items.Add(item);
             }
         }
-        items.Add(mine);
+        styles.Items.Add(mine);
+        items.Add(styles);
         items.Add(new Separator());
-
-        items.Add(Act(isHi ? "सुधारें और बेहतर बनाएं (Improve)" : "Correct and improve", new ActionSpec(ActionKind.Improve)));
-        items.Add(Act(isHi ? "सिर्फ गलतियाँ ठीक करें (Fix errors)" : "Fix errors only", new ActionSpec(ActionKind.Fix)));
 
         var sum = new MenuItem { Header = isHi ? "समरी (Summary)" : "Summary" };
         foreach (var p in Catalog.SummaryPercents)
@@ -186,7 +188,7 @@ internal static class MenuFactory
         foreach (var (preset, model, active) in ModelChoices(app))
         {
             if (preset.Id != lastProvider) { root.Items.Add(new MenuItem { Header = preset.Name, IsEnabled = false }); lastProvider = preset.Id; }
-            var i = new MenuItem { Header = (active ? "✓ " : "   ") + model };
+            var i = new MenuItem { Header = model, ToggleType = MenuItemToggleType.Radio, IsChecked = active, GroupName = "rewordly-model" };
             var id = preset.Id; var m = model;
             i.Click += (_, _) => { close?.Invoke(); app.SelectModel(id, m); };
             root.Items.Add(i);
