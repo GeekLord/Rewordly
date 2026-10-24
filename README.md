@@ -231,7 +231,11 @@ Compile and package the Rewordly single-file executable for Windows.
    dotnet build
    ```
    **Expected result:** The build succeeds with zero errors.
-6. Publish the self-contained single-file executable for Windows x64:
+6. Stop any active instance of Rewordly before publishing to avoid file lock errors:
+   ```powershell
+   Stop-Process -Name Rewordly -Force -ErrorAction SilentlyContinue
+   ```
+7. Publish the self-contained single-file executable for Windows x64:
    ```powershell
    .\packaging\publish.ps1 -Targets @('win-x64')
    ```
@@ -240,11 +244,11 @@ Compile and package the Rewordly single-file executable for Windows.
    dotnet publish src/Rewordly.Desktop/Rewordly.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:EnableWindowsTargeting=true -o pub/win-x64
    ```
    **Expected result:** The single-file binary `pub\win-x64\Rewordly.exe` is generated.
-7. Optional: Publish the executable for Windows ARM64:
+8. Optional: Publish the executable for Windows ARM64:
    ```powershell
    .\packaging\publish.ps1 -Targets @('win-arm64')
    ```
-8. Package release zip archives and compute SHA-256 checksums:
+9. Package release zip archives and compute SHA-256 checksums:
    ```powershell
    .\packaging\package.ps1 -Version "2.0.0"
    ```
@@ -303,6 +307,13 @@ Compile and package the Rewordly single-file executable for Windows.
 ### Windows: Hotkey Does Not Trigger In Administrative Windows
 - **Cause:** Windows User Account Control blocks unprivileged applications from intercepting keystrokes in elevated windows.
 - **Solution:** Right-click `Rewordly.exe` and select **Run as administrator**.
+
+### Windows: File Lock Error During Publish (IOException: The process cannot access the file)
+- **Cause:** An active background instance of `Rewordly.exe` locks the executable file in `pub\win-x64\`.
+- **Solution:** Stop the active process before executing the publish command:
+  ```powershell
+  Stop-Process -Name Rewordly -Force -ErrorAction SilentlyContinue
+  ```
 
 ### macOS: Double-Copy Does Not Open Menu
 - **Cause:** Missing Accessibility or Input Monitoring permissions.
