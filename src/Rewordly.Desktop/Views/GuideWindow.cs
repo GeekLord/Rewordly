@@ -22,10 +22,10 @@ internal sealed class GuideWindow : Window
             Control badge = num != null
                 ? new Border
                 {
-                    Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = Views.Theme.HeaderBrush(),
-                    Child = new TextBlock { Text = num, Foreground = Avalonia.Media.Brushes.White, FontWeight = Avalonia.Media.FontWeight.Bold, FontSize = 14, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+                    Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = Views.Theme.IndigoDye(),
+                    Child = new TextBlock { Text = num, Foreground = Avalonia.Media.Brushes.White, FontFamily = Views.Theme.Display, FontSize = 17, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
                 }
-                : Ui.Chip("Info", "Teal", 30);
+                : Ui.Chip("Info", "Peacock", 30);
             badge.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
             badge.Margin = new Thickness(0, 0, 14, 0);
             var heading = Ui.Text(title, bold: true, size: 15);
@@ -67,6 +67,6 @@ internal sealed class GuideWindow : Window
             P("Optional packages: xdotool (returns focus to the original window before pasting), libsecret-tools (stores keys in the system keyring), espeak-ng (read aloud).");
         }
         panel.Children.Add(Ui.Row(Ui.Btn("Open Settings", () => { Close(); app.ShowSettings(); }, primary: true, icon: "Settings"), Ui.Btn("Close", Close)));
-        Content = Ui.Framed(Ui.Header("Welcome to Rewordly", "Four steps to better writing in any app"), new ScrollViewer { Content = panel });
+        Content = Ui.Framed(Ui.Hero("Welcome to Rewordly", "Four steps to better writing in any app"), new ScrollViewer { Content = panel });
     }
 }

@@ -102,44 +102,70 @@ internal static class Ui
         VerticalAlignment = VerticalAlignment.Center,
     };
 
-    /// <summary>Brand gradient band at the top of a window: icon, title and one line of context.</summary>
+    /// <summary>
+    /// Top of every window: block-printed indigo cloth, the window's mark, a serif title and one line of
+    /// context, finished with the cloth's printed border. Full and compact are the only two sizes.
+    /// </summary>
     public static Control Header(string title, string subtitle, string? icon = null, bool compact = false)
     {
+        double mark = compact ? 34 : 44;
         Control lead = icon == null
-            ? new Border
-            {
-                Padding = new Thickness(4), CornerRadius = new CornerRadius(12),
-                Background = new SolidColorBrush(Color.FromArgb(0x40, 255, 255, 255)), Child = Logo(compact ? 26 : 36),
-            }
+            ? Logo(mark)
             : new Border
             {
-                Width = compact ? 32 : 40, Height = compact ? 32 : 40, CornerRadius = new CornerRadius(10),
-                Background = new SolidColorBrush(Color.FromArgb(0x33, 255, 255, 255)),
+                Width = mark, Height = mark, CornerRadius = new CornerRadius(compact ? 9 : 12),
+                Background = new SolidColorBrush(Color.FromArgb(0x26, 255, 255, 255)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0x40, 255, 255, 255)), BorderThickness = new Thickness(1),
                 Child = new PathIcon { Data = StreamGeometry.Parse(Icons.Paths[icon]), Width = compact ? 18 : 22, Height = compact ? 18 : 22, Foreground = Brushes.White },
             };
-        var sub = new TextBlock { Text = subtitle, FontSize = 12.5, Foreground = Brushes.White, Opacity = 0.92, TextWrapping = TextWrapping.Wrap, IsVisible = subtitle.Length > 0 };
+        var sub = new TextBlock { Text = subtitle, FontSize = 12.5, Foreground = new SolidColorBrush(Color.Parse("#E9E6F5")), TextWrapping = TextWrapping.Wrap, IsVisible = subtitle.Length > 0 };
         var text = new StackPanel
         {
-            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0),
-            Children = { new TextBlock { Text = title, FontSize = compact ? 15 : 18, FontWeight = FontWeight.SemiBold, Foreground = Brushes.White, TextTrimming = TextTrimming.CharacterEllipsis }, sub },
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(14, 0, 0, 0), Spacing = 1,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = title, FontFamily = Theme.Display, FontSize = compact ? 19 : 24, Foreground = Brushes.White,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                },
+                sub,
+            },
         };
-        var row = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*") };
+        var row = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*"), Margin = compact ? new Thickness(18, 11, 18, 11) : new Thickness(22, 18, 22, 18) };
         Grid.SetColumn(text, 1);
         row.Children.Add(lead);
         row.Children.Add(text);
-        // Large faint sparkle on the right echoes the "AI writing" idea without competing with the text.
-        var motif = new PathIcon
+        var cloth = new Border { Background = Theme.ClothBrush(), Child = new Border { Background = Theme.DyeOverlay(), Child = row } };
+        double edge = compact ? 14 : 18;
+        var border = Theme.BorderStrip(edge);
+        return new StackPanel { ClipToBounds = true, Children = { cloth, border } };
+    }
+
+    /// <summary>
+    /// Photographic header for the welcome guide: the carved block and its prints on the left,
+    /// title set in indigo ink on the open cotton to the right.
+    /// </summary>
+    public static Control Hero(string title, string subtitle)
+    {
+        var img = new Image
         {
-            Data = StreamGeometry.Parse(Icons.Paths["Sparkle"]), Width = compact ? 64 : 84, Height = compact ? 64 : 84,
-            Foreground = Brushes.White, Opacity = 0.13, HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -30, 18, -30), IsHitTestVisible = false,
+            Source = Theme.Asset("welcome-banner.jpg"), Stretch = Stretch.UniformToFill, Height = 190,
+            HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center,
         };
-        return new Border
+        var ink = new SolidColorBrush(Color.Parse("#1F2878"));
+        var text = new StackPanel
         {
-            Background = Theme.HeaderBrush(), ClipToBounds = true,
-            Padding = compact ? new Thickness(16, 10) : new Thickness(20, 16),
-            Child = new Panel { Children = { motif, row } },
+            HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center,
+            Width = 250, Margin = new Thickness(0, 0, 22, 0), Spacing = 4,
+            Children =
+            {
+                new TextBlock { Text = title, FontFamily = Theme.Display, FontSize = 28, Foreground = ink, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 2) },
+                new TextBlock { Text = subtitle, FontSize = 13, Foreground = new SolidColorBrush(Color.Parse("#3B3550")), TextWrapping = TextWrapping.Wrap },
+            },
         };
+        var edge = Theme.BorderStrip(18);
+        return new StackPanel { ClipToBounds = true, Children = { new Panel { Height = 190, ClipToBounds = true, Children = { img, text } }, edge } };
     }
 
     /// <summary>Header band on top, window content below.</summary>
@@ -331,7 +357,7 @@ internal static class Dialog
         var y = Ui.Btn(yes, () => { result = true; w!.Close(); }, primary: true);
         var n = Ui.Btn(no, () => w!.Close());
         y.IsDefault = true; n.IsCancel = true;
-        var panel = new StackPanel { Spacing = 10, Children = { Message(message, "Warning", "Amber"), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { y, n } } } };
+        var panel = new StackPanel { Spacing = 10, Children = { Message(message, "Warning", "Turmeric"), new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { y, n } } } };
         w = Make(title, panel);
         w.Closed += (_, _) => tcs.TrySetResult(result);
         Ui.ShowFocused(w);
@@ -347,7 +373,7 @@ internal static class Dialog
         var ok = Ui.Btn("OK", () => { result = box.Text?.Trim(); w!.Close(); }, primary: true);
         var cancel = Ui.Btn("Cancel", () => w!.Close());
         ok.IsDefault = true; cancel.IsCancel = true;
-        var panel = new StackPanel { Spacing = 10, Children = { Message(prompt, "Edit", "Violet"), box, new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok, cancel } } } };
+        var panel = new StackPanel { Spacing = 10, Children = { Message(prompt, "Edit", "Madder"), box, new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok, cancel } } } };
         w = Make(title, panel, 480);
         w.Opened += (_, _) => box.Focus();
         w.Closed += (_, _) => tcs.TrySetResult(string.IsNullOrWhiteSpace(result) ? null : result);
@@ -370,7 +396,7 @@ internal sealed class Toast : Window
         ShowActivated = false;
         Width = 360;
         SizeToContent = SizeToContent.Height;
-        Control lead = warning ? Ui.Chip("Warning", "Amber", 32) : Ui.Logo(32);
+        Control lead = warning ? Ui.Chip("Warning", "Turmeric", 32) : Ui.Logo(32);
         lead.VerticalAlignment = VerticalAlignment.Top;
         lead.Margin = new Thickness(0, 1, 12, 0);
         var body = new StackPanel
@@ -462,7 +488,7 @@ internal sealed class BusyWindow : Window
         cancel.Margin = new Thickness(0);
         cancel.VerticalAlignment = VerticalAlignment.Center;
         var grid = new Grid { ColumnDefinitions = ColumnDefinitions.Parse("Auto,*,Auto"), Margin = new Thickness(14, 10, 14, 8) };
-        var chip = Ui.Chip("Sparkle", "Indigo", 34);
+        var chip = Ui.Logo(34);
         chip.Margin = new Thickness(0, 0, 12, 0);
         var left = new StackPanel { Children = { Ui.Text(action + "…", bold: true), sub } };
         left.Children[0].Margin = new Thickness(0, 0, 8, 0);

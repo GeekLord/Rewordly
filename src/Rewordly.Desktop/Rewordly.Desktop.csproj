@@ -16,6 +16,8 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets/icon.png" LogicalName="Rewordly.icon.png" />
+    <AvaloniaResource Include="Assets/Brand/**" />
+    <AvaloniaResource Include="Assets/Fonts/*.ttf" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.22" />

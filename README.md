@@ -206,19 +206,56 @@ You can configure an API key in the application Settings window or set environme
 
 ### Procedure (PowerShell / Windows)
 
-1. Open PowerShell and navigate to the project directory.
-2. Run automated tests:
+#### Purpose
+Compile and package the Rewordly single-file executable for Windows.
+
+#### Prerequisites
+- Windows 10 (64-bit) or Windows 11.
+- .NET 8.0 SDK or later.
+
+#### Procedure
+1. Open PowerShell.
+2. Navigate to the project root directory.
+3. Configure the .NET environment paths if you installed .NET in a local directory:
+   ```powershell
+   $env:DOTNET_ROOT = "$env:LOCALAPPDATA\Microsoft\dotnet"
+   $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+   ```
+4. Run automated tests:
    ```powershell
    dotnet test
    ```
-3. Publish target binaries:
+   **Expected result:** All unit tests pass with zero failures.
+5. Compile the debug build to verify the source code:
+   ```powershell
+   dotnet build
+   ```
+   **Expected result:** The build succeeds with zero errors.
+6. Publish the self-contained single-file executable for Windows x64:
    ```powershell
    .\packaging\publish.ps1 -Targets @('win-x64')
    ```
-4. Create distribution archives:
+   *Alternative CLI command without the helper script:*
+   ```powershell
+   dotnet publish src/Rewordly.Desktop/Rewordly.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:EnableWindowsTargeting=true -o pub/win-x64
+   ```
+   **Expected result:** The single-file binary `pub\win-x64\Rewordly.exe` is generated.
+7. Optional: Publish the executable for Windows ARM64:
+   ```powershell
+   .\packaging\publish.ps1 -Targets @('win-arm64')
+   ```
+8. Package release zip archives and compute SHA-256 checksums:
    ```powershell
    .\packaging\package.ps1 -Version "2.0.0"
    ```
+   **Expected result:** The archive `dist\Rewordly-2.0.0-win-x64.zip` and the checksum file `dist\SHA256SUMS.txt` are generated.
+
+#### Windows Binary Details
+- **Binary path:** `pub\win-x64\Rewordly.exe` (or `pub\win-arm64\Rewordly.exe`)
+- **Package type:** Self-contained single-file executable with embedded runtime and compressed dependencies.
+- **Client runtime requirements:** None. The application runs on systems without .NET installed.
+- **Size:** Approximately 46 MB.
+- **Execution:** Double-click `Rewordly.exe` or execute `.\pub\win-x64\Rewordly.exe` from PowerShell or Command Prompt.
 
 ---
 

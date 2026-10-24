@@ -28,7 +28,7 @@ internal sealed class SpeechWindow : Window
         _play = Ui.Btn("Play", PlayPause, primary: true, icon: "Play");
         var stop = Ui.Btn("Stop", Stop, icon: "Stop", hue: "Muted");
         _info = Ui.Text("", muted: true);
-        var more = Ui.Btn("Get more voices", icon: "PersonVoice", hue: "Teal", onClick: () => { if (_tts.MoreVoicesLink != null) Os.Open(_tts.MoreVoicesLink); else _info.Text = _tts.MoreVoicesHint; });
+        var more = Ui.Btn("Get more voices", icon: "PersonVoice", hue: "Peacock", onClick: () => { if (_tts.MoreVoicesLink != null) Os.Open(_tts.MoreVoicesLink); else _info.Text = _tts.MoreVoicesHint; });
         ToolTip.SetTip(more, _tts.MoreVoicesHint);
 
         IReadOnlyList<Voice> voices = Array.Empty<Voice>();
