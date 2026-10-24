@@ -83,11 +83,13 @@ public class PromptTests
     [InlineData("fr", "Réécris le texte suivant dans le style")]
     [InlineData("de", "Schreibe den folgenden Text im Stil von")]
     [InlineData("en", "Rewrite the following text in")]
+    [InlineData("hi", "निम्नलिखित पाठ को")]
     public void Multilingual_style_defaults(string lang, string expectedPrefix)
     {
         var s = new AppSettings { PromptLanguage = lang };
         var p = Prompts.Build(s, new ActionSpec(ActionKind.Style, "Formal"), "demo");
         Assert.StartsWith(expectedPrefix, p.User);
+        if (lang == "hi") Assert.Contains("औपचारिक (Formal)", p.User);
     }
 
     [Fact]

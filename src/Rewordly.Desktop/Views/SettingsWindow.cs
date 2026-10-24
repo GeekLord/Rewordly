@@ -107,6 +107,7 @@ internal sealed class SettingsWindow : Window
             ["es"] = "Español (es)",
             ["fr"] = "Français (fr)",
             ["de"] = "Deutsch (de)",
+            ["hi"] = "हिन्दी / Hindi (hi)",
         };
         var langs = Prompts.SupportedLanguages.ToList();
         PromptLanguageBox = new ComboBox { ItemsSource = langs.Select(l => langLabels.TryGetValue(l, out var name) ? name : l).ToList(), MinWidth = 200 };

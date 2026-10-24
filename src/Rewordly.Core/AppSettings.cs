@@ -70,7 +70,7 @@ public sealed class AppSettings
             Providers = new Dictionary<string, ProviderConfig>(Providers, StringComparer.OrdinalIgnoreCase);
         if (PromptOverrides.Comparer != StringComparer.OrdinalIgnoreCase)
             PromptOverrides = new Dictionary<string, string>(PromptOverrides, StringComparer.OrdinalIgnoreCase);
-        if (PromptLanguage is not ("en" or "it" or "es" or "fr" or "de"))
+        if (PromptLanguage is not ("en" or "it" or "es" or "fr" or "de" or "hi"))
             PromptLanguage = "en";
         TimeoutSeconds = Math.Clamp(TimeoutSeconds, 10, 600);
         DoubleCopyWindowMs = Math.Clamp(DoubleCopyWindowMs, 200, 3000);

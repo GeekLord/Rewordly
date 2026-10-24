@@ -31,6 +31,28 @@ public static class Catalog
 
     public static IEnumerable<string> AllStyles => MainStyles.Concat(OtherStyles);
 
+    public static readonly IReadOnlyDictionary<string, string> HindiStyles =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Informal"] = "अनौपचारिक (Informal)",
+            ["Friendly"] = "मैत्रीपूर्ण (Friendly)",
+            ["Simple"] = "सरल (Simple)",
+            ["Formal"] = "औपचारिक (Formal)",
+            ["Professional"] = "व्यावसायिक (Professional)",
+            ["Argumentative"] = "तर्कपूर्ण (Argumentative)",
+            ["Persuasive"] = "प्रेरक (Persuasive)",
+            ["Creative"] = "रचनात्मक (Creative)",
+            ["Technical"] = "तकनीकी (Technical)",
+            ["Academic"] = "अकादमिक (Academic)",
+            ["Journalistic"] = "पत्रकारिता (Journalistic)",
+            ["Humorous"] = "हास्यपूर्ण (Humorous)",
+            ["Narrative"] = "कथात्मक (Narrative)",
+            ["Descriptive"] = "वर्णनात्मक (Descriptive)",
+            ["Expository"] = "व्याख्यात्मक (Expository)",
+            ["Poetic"] = "काव्यात्मक (Poetic)",
+            ["Satirical"] = "व्यंग्यात्मक (Satirical)",
+        };
+
     public static readonly int[] SummaryPercents = { 70, 50, 30 };
 
     public static readonly (string Id, string Label, string Description)[] Levels =
@@ -41,11 +63,35 @@ public static class Catalog
         ("advanced", "Advanced", "deep familiarity with the subject; technical language and nuance are welcome"),
     };
 
-    public static string LevelLabel(string id) =>
-        Levels.FirstOrDefault(l => l.Id == id).Label ?? id;
+    public static readonly IReadOnlyDictionary<string, (string Label, string Description)> HindiLevels =
+        new Dictionary<string, (string Label, string Description)>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["none"] = ("कोई पूर्व ज्ञान नहीं (None)", "विषय का कोई पूर्व ज्ञान नहीं; सरल दैनिक शब्दों, छोटे वाक्यों और सरल उदाहरणों का उपयोग करें"),
+            ["basic"] = ("बुनियादी (Basic)", "मूलभूत विचारों को जानता है; गैर-दैनिक भाषा वाले किसी भी शब्द को संक्षेप में परिभाषित करें"),
+            ["intermediate"] = ("मध्यम (Intermediate)", "बुनियादी बातों से परिचित; मानक शब्दावली ठीक है"),
+            ["advanced"] = ("उन्नत (Advanced)", "विषय से गहरा परिचय; तकनीकी भाषा और सूक्ष्मताओं का स्वागत है"),
+        };
 
-    public static string LevelDescription(string id) =>
-        Levels.FirstOrDefault(l => l.Id == id).Description ?? id;
+    public static string StyleLabel(string style, string? lang = null)
+    {
+        if (lang?.Equals("hi", StringComparison.OrdinalIgnoreCase) == true && HindiStyles.TryGetValue(style, out var hi))
+            return hi;
+        return style;
+    }
+
+    public static string LevelLabel(string id, string? lang = null)
+    {
+        if (lang?.Equals("hi", StringComparison.OrdinalIgnoreCase) == true && HindiLevels.TryGetValue(id, out var hi))
+            return hi.Label;
+        return Levels.FirstOrDefault(l => l.Id == id).Label ?? id;
+    }
+
+    public static string LevelDescription(string id, string? lang = null)
+    {
+        if (lang?.Equals("hi", StringComparison.OrdinalIgnoreCase) == true && HindiLevels.TryGetValue(id, out var hi))
+            return hi.Description;
+        return Levels.FirstOrDefault(l => l.Id == id).Description ?? id;
+    }
 
     public static readonly string[] MainLanguages =
     {
