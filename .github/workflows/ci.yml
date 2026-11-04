@@ -15,20 +15,30 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      all_os:
+        description: 'Also test on Windows and macOS (GitHub-hosted, PAID minutes)'
+        type: boolean
+        default: false
 
+# Linux jobs run on AWS CodeBuild (no paid GitHub minutes). See GeekLord/tribal-rhythms docs/infra/RUNNERS.md.
 permissions:
   contents: read
 
 jobs:
   test:
     name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os == 'linux' && format('codebuild-rewordly-{0}-{1}', github.run_id, github.run_attempt) || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ fromJSON(inputs.all_os && '["linux","windows-latest","macos-latest"]' || '["linux"]') }}
 
     steps:
+      - name: Runner prep (AWS CodeBuild - sudo shim)
+        if: runner.os == 'Linux'
+        run: command -v sudo >/dev/null || { printf '#!/bin/sh\nexec "$@"\n' > /usr/local/bin/sudo; chmod +x /usr/local/bin/sudo; }
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -48,8 +58,11 @@ jobs:
 
   cross-compile:
     name: Cross-Compile All Targets
-    runs-on: ubuntu-latest
+    runs-on: ${{ format('codebuild-rewordly-{0}-{1}', github.run_id, github.run_attempt) }}
     steps:
+      - name: Runner prep (AWS CodeBuild - sudo shim)
+        if: runner.os == 'Linux'
+        run: command -v sudo >/dev/null || { printf '#!/bin/sh\nexec "$@"\n' > /usr/local/bin/sudo; chmod +x /usr/local/bin/sudo; }
       - name: Check out repository
         uses: actions/checkout@v4
 

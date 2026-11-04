@@ -17,9 +17,12 @@ permissions:
 jobs:
   build-release:
     name: Build and Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ format('codebuild-rewordly-{0}-{1}', github.run_id, github.run_attempt) }}
+    # AWS CodeBuild runner, see GeekLord/tribal-rhythms docs/infra/RUNNERS.md
 
     steps:
+      - name: Runner prep (AWS CodeBuild - sudo shim)
+        run: command -v sudo >/dev/null || { printf '#!/bin/sh\nexec "$@"\n' > /usr/local/bin/sudo; chmod +x /usr/local/bin/sudo; }
       - name: Check out repository
         uses: actions/checkout@v4
         with:
