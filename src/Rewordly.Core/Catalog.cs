@@ -1,6 +1,6 @@
 namespace Rewordly.Core;
 
-public enum ActionKind { Style, Improve, Fix, Summary, Explain, Translate, Chat, Listen }
+public enum ActionKind { Style, Improve, Fix, Summary, Explain, Translate, Chat, Listen, AgentPrompt }
 
 /// <summary>One thing the user can ask for from the menu.</summary>
 public sealed record ActionSpec(ActionKind Kind, string Argument = "")
@@ -15,6 +15,7 @@ public sealed record ActionSpec(ActionKind Kind, string Argument = "")
         ActionKind.Translate => $"Translate into {Argument}",
         ActionKind.Chat => "Chat",
         ActionKind.Listen => "Listen",
+        ActionKind.AgentPrompt => $"AI agent prompt ({Prompts.AgentLabel(Argument)})",
         _ => Kind.ToString(),
     };
 
@@ -32,6 +33,7 @@ public sealed record ActionSpec(ActionKind Kind, string Argument = "")
                 ActionKind.Translate => $"{Argument} में अनुवाद (Translate)",
                 ActionKind.Chat => "बातचीत (Chat)",
                 ActionKind.Listen => "बोलकर सुनाएं (Listen)",
+                ActionKind.AgentPrompt => $"AI एजेंट प्रॉम्प्ट ({Prompts.AgentLabel(Argument)})",
                 _ => Kind.ToString(),
             };
         }

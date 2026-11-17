@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Rewordly.Core;
 
 /// <summary>A system + user prompt pair ready to send.</summary>
@@ -6,6 +8,7 @@ public sealed record PromptPair(string System, string User);
 /// <summary>
 /// Default prompt templates per action and language. Every template can be overridden in settings.
 /// Placeholders: {selectedText} or {text}, {selectedStyle} or {style}, {num} or {words}, {value} or {level}, {currentResultText}.
+/// The "AI agent prompt" templates live as files in prompts/agent-prompt/ (embedded at build time); see prompts/README.md.
 /// </summary>
 public static class Prompts
 {
@@ -136,6 +139,41 @@ public static class Prompts
             [KeyChatSystem] = "Chat system instruction",
         };
 
+    /// <summary>Variants of the "AI agent prompt" action, from prompts/agent-prompt/NN-id.txt, in file order.</summary>
+    public static readonly IReadOnlyList<(string Id, string Label, string Template)> AgentTemplates = LoadAgentTemplates();
+
+    // Registers the agent templates so Build, Settings › Prompts, overrides and reset treat them like built-in prompts.
+    static Prompts()
+    {
+        foreach (var (id, label, template) in AgentTemplates)
+        {
+            ((Dictionary<string, IReadOnlyDictionary<string, string>>)MultilingualDefaults)[AgentKey(id)] =
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["en"] = template };
+            ((Dictionary<string, string>)Labels)[AgentKey(id)] = $"AI agent prompt: {label}";
+        }
+    }
+
+    public static string AgentKey(string id) => "AGENT_" + id;
+
+    public static string AgentLabel(string id) => AgentTemplates.FirstOrDefault(t => t.Id == id).Label ?? id;
+
+    private static List<(string Id, string Label, string Template)> LoadAgentTemplates()
+    {
+        const string prefix = "agent-prompt/";
+        var asm = typeof(Prompts).Assembly;
+        var list = new List<(string, string, string)>();
+        foreach (var name in asm.GetManifestResourceNames().Where(n => n.StartsWith(prefix)).Order(StringComparer.Ordinal))
+        {
+            using var reader = new StreamReader(asm.GetManifestResourceStream(name)!);
+            var body = reader.ReadToEnd().Replace("\r\n", "\n");
+            var nl = body.IndexOf('\n');
+            if (nl < 0) continue;
+            var id = Regex.Replace(Path.GetFileNameWithoutExtension(name[prefix.Length..]), @"^\d+-", "");
+            list.Add((id, body[..nl].TrimStart('#').Trim(), body[(nl + 1)..].Trim()));
+        }
+        return list;
+    }
+
     public static string GetDefault(string key, string? lang = "en")
     {
         var targetLang = string.IsNullOrWhiteSpace(lang) ? "en" : lang.Trim().ToLowerInvariant();
@@ -210,6 +248,7 @@ public static class Prompts
             ActionKind.Translate => isPreviewRetranslate
                 ? Fill(Template(s, KeyPreviewRetranslate), text, value: action.Argument, language: action.Argument)
                 : Fill(Template(s, KeyTranslate), text, style: action.Argument, language: action.Argument),
+            ActionKind.AgentPrompt => Fill(Template(s, AgentKey(action.Argument)), text),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action.Kind, "No prompt for this action."),
         };
         return new PromptPair(system, user);

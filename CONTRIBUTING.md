@@ -60,6 +60,10 @@ Maintain professional communication. Respect other contributors and follow court
 - Do not commit secrets, API keys, or machine-specific paths.
 - Write unit tests for new business logic in `tests/Rewordly.Tests`.
 
+## Contributing Prompt Templates
+
+The templates behind **Rewrite as AI agent prompt** are plain text files in [`prompts/agent-prompt/`](prompts/agent-prompt/). You can add or improve a variant without writing C#. See [`prompts/README.md`](prompts/README.md) for the file format and review checklist.
+
 ## Procedure to Submit Changes
 
 1. Create a descriptive feature branch from `main`:

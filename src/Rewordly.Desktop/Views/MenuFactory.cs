@@ -90,6 +90,10 @@ internal static class MenuFactory
         }
         styles.Items.Add(mine);
         items.Add(styles);
+
+        var agent = With(new MenuItem { Header = isHi ? "AI एजेंट प्रॉम्प्ट में बदलें (AI agent prompt)" : "Rewrite as AI agent prompt" }, "Bot", "Pink");
+        foreach (var t in Prompts.AgentTemplates) agent.Items.Add(Act(t.Label, new ActionSpec(ActionKind.AgentPrompt, t.Id)));
+        items.Add(agent);
         items.Add(new Separator());
 
         var sum = With(new MenuItem { Header = isHi ? "समरी (Summary)" : "Summary" }, "TextBulletListSquare", "Violet");

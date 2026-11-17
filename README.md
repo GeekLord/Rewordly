@@ -14,6 +14,7 @@ The application uses C# with .NET 8, [Avalonia UI](https://avaloniaui.net/) for 
 
 - **Context Menu at Cursor:** Trigger the menu at the mouse pointer location after you press the copy shortcut twice.
 - **Text Styles:** Apply 12 core styles (Formal, Informal, Technical, Academic, and others) or custom user styles.
+- **AI Agent Prompts:** Rewrite a rough request into a well-structured prompt for a general agent, a coding agent, a research agent, a system prompt, or a chat assistant. Templates live in [`prompts/`](prompts/README.md).
 - **Proofreading:** Select **Correct and improve** or **Fix errors only**.
 - **Summarization:** Generate summaries at 70%, 50%, or 30% length budgets.
 - **Explanation:** Generate explanations tailored to four knowledge levels (None, Basic, Intermediate, Advanced).
@@ -278,6 +279,7 @@ Compile and package the Rewordly single-file executable for Windows.
 │   ├── publish.ps1           # Windows PowerShell publish script
 │   ├── publish.sh            # Linux/macOS bash publish script
 │   └── rewordly.desktop      # Linux XDG desktop entry
+├── prompts/                  # Contributable prompt templates (AI agent prompt variants)
 ├── src/
 │   ├── Rewordly.Core/        # Logic library: settings, AI clients, prompts, text utilities
 │   │   ├── Providers/        # Gemini, OpenAI, OpenRouter, Groq, Ollama adapters

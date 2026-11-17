@@ -149,6 +149,34 @@ public class PromptTests
     }
 
     [Fact]
+    public void Agent_templates_are_embedded_and_well_formed()
+    {
+        Assert.NotEmpty(Prompts.AgentTemplates);
+        Assert.Equal(Prompts.AgentTemplates.Count, Prompts.AgentTemplates.Select(t => t.Id).Distinct().Count());
+        foreach (var (id, label, template) in Prompts.AgentTemplates)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(label), $"{id}: line 1 must be '# <Menu label>'");
+            Assert.False(template.StartsWith('#'), $"{id}: template must not start with '#'");
+            Assert.Equal(1, template.Split("{selectedText}").Length - 1);
+            Assert.True(Prompts.Labels.ContainsKey(Prompts.AgentKey(id)), $"{id}: not registered in Labels");
+        }
+    }
+
+    [Fact]
+    public void Agent_prompt_wraps_selected_text()
+    {
+        var s = new AppSettings();
+        var action = new ActionSpec(ActionKind.AgentPrompt, "general");
+        var p = Prompts.Build(s, action, "fix the login bug");
+        Assert.Contains("<input>\nfix the login bug\n</input>", p.User);
+        Assert.DoesNotContain("{selectedText}", p.User);
+        Assert.Equal("AI agent prompt (General agent)", action.Title);
+
+        s.PromptOverrides[Prompts.AgentKey("general")] = "AGENT>>{selectedText}<<";
+        Assert.Equal("AGENT>>fix the login bug<<", Prompts.Build(s, action, "fix the login bug").User);
+    }
+
+    [Fact]
     public void Chat_without_text_sends_instruction_only()
     {
         var p = Prompts.BuildChat(new AppSettings(), "  Write a haiku  ", "");

@@ -117,6 +117,7 @@ internal sealed class PreviewWindow : Window
         ActionKind.Translate => "Translate",
         ActionKind.Chat => "ChatSparkle",
         ActionKind.Listen => "Speaker2",
+        ActionKind.AgentPrompt => "Bot",
         _ => "PenSparkle",
     };
 

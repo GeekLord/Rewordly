@@ -44,7 +44,7 @@ internal sealed class GuideWindow : Window
           "Choose any model: type its name or use Refresh list. For fully offline use, install Ollama and pick \"Ollama (local, offline)\".");
         H("2. Use it anywhere");
         P($"Select text in any app and press {m}+C twice quickly while holding {m}. A menu opens at the pointer: rewrite in a style, " +
-          "correct, fix errors only, summarise, explain, translate, chat, or listen.");
+          "turn it into an AI agent prompt, correct, fix errors only, summarise, explain, translate, chat, or listen.");
         P($"Alternative: {Os.AltShortcutLabel} opens the same menu without changing your clipboard.");
         H("3. Review and paste");
         P("The result window lets you edit the text, regenerate, switch model, translate the result, or listen to it. " +
