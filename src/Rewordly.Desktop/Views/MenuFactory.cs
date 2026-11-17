@@ -92,7 +92,15 @@ internal static class MenuFactory
         items.Add(styles);
 
         var agent = With(new MenuItem { Header = isHi ? "AI एजेंट प्रॉम्प्ट में बदलें (AI agent prompt)" : "Rewrite as AI agent prompt" }, "Bot", "Pink");
-        foreach (var t in Prompts.AgentTemplates) agent.Items.Add(Act(t.Label, new ActionSpec(ActionKind.AgentPrompt, t.Id)));
+        foreach (var group in Prompts.AgentTemplates.GroupBy(t => t.Category))
+        {
+            if (group.Key.Length > 0)
+            {
+                if (agent.Items.Count > 0) agent.Items.Add(new Separator());
+                agent.Items.Add(new MenuItem { Header = group.Key, IsEnabled = false });
+            }
+            foreach (var t in group) agent.Items.Add(Act(t.Label, new ActionSpec(ActionKind.AgentPrompt, t.Id)));
+        }
         items.Add(agent);
         items.Add(new Separator());
 

@@ -153,7 +153,7 @@ public class PromptTests
     {
         Assert.NotEmpty(Prompts.AgentTemplates);
         Assert.Equal(Prompts.AgentTemplates.Count, Prompts.AgentTemplates.Select(t => t.Id).Distinct().Count());
-        foreach (var (id, label, template) in Prompts.AgentTemplates)
+        foreach (var (id, _, label, template) in Prompts.AgentTemplates)
         {
             Assert.False(string.IsNullOrWhiteSpace(label), $"{id}: line 1 must be '# <Menu label>'");
             Assert.False(template.StartsWith('#'), $"{id}: template must not start with '#'");
@@ -171,6 +171,10 @@ public class PromptTests
         Assert.Contains("<input>\nfix the login bug\n</input>", p.User);
         Assert.DoesNotContain("{selectedText}", p.User);
         Assert.Equal("AI agent prompt (General agent)", action.Title);
+        var general = Prompts.AgentTemplates.Single(t => t.Id == "general");
+        Assert.Equal(("", "General agent"), (general.Category, general.Label));
+        var image = Prompts.AgentTemplates.Single(t => t.Id == "image-generation");
+        Assert.Equal(("Image AI", "Image generation"), (image.Category, image.Label));
 
         s.PromptOverrides[Prompts.AgentKey("general")] = "AGENT>>{selectedText}<<";
         Assert.Equal("AGENT>>fix the login bug<<", Prompts.Build(s, action, "fix the login bug").User);

@@ -8,6 +8,7 @@ Write the prompt so that an agent with no other context can do the work well:
 - State the task itself and its requirements and constraints, including anything the agent must not do.
 - Define what "done" looks like: the expected output, its format and tone, and how success is checked.
 - Say what the agent should do when information is missing or something is ambiguous.
+- Ask the agent to end with a short report: what it did, what it skipped or could not check, and any risk the user must know.
 
 Rules:
 - Keep every fact, name, number and requirement from the draft. Do not invent requirements, tools or facts. Where an essential detail is missing, insert a short placeholder in square brackets, such as [target audience], instead of guessing.

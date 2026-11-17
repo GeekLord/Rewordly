@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Rewrite as AI agent prompt** action menu entry with five variants: General agent, Coding agent, Research agent, System prompt, and Chat assistant.
+- **Rewrite as AI agent prompt** action menu entry with five variants: General agent, Coding agent, Research agent, System prompt, and Chat assistant, plus an **Image AI** section with Image generation and Image editing.
 - `prompts/agent-prompt/` folder of plain-text templates that contributors can review and extend without code changes; each file adds a menu variant and is editable under Settings › Prompts.
 
 ## [2.0.0] - 2026-10-24

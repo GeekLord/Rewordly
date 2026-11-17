@@ -139,13 +139,16 @@ public static class Prompts
             [KeyChatSystem] = "Chat system instruction",
         };
 
-    /// <summary>Variants of the "AI agent prompt" action, from prompts/agent-prompt/NN-id.txt, in file order.</summary>
-    public static readonly IReadOnlyList<(string Id, string Label, string Template)> AgentTemplates = LoadAgentTemplates();
+    /// <summary>
+    /// Variants of the "AI agent prompt" action, from prompts/agent-prompt/NN-id.txt, in file order.
+    /// Line 1 "# Label" or "# Category / Label"; Category is "" for the top group.
+    /// </summary>
+    public static readonly IReadOnlyList<(string Id, string Category, string Label, string Template)> AgentTemplates = LoadAgentTemplates();
 
     // Registers the agent templates so Build, Settings › Prompts, overrides and reset treat them like built-in prompts.
     static Prompts()
     {
-        foreach (var (id, label, template) in AgentTemplates)
+        foreach (var (id, _, label, template) in AgentTemplates)
         {
             ((Dictionary<string, IReadOnlyDictionary<string, string>>)MultilingualDefaults)[AgentKey(id)] =
                 new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["en"] = template };
@@ -157,11 +160,11 @@ public static class Prompts
 
     public static string AgentLabel(string id) => AgentTemplates.FirstOrDefault(t => t.Id == id).Label ?? id;
 
-    private static List<(string Id, string Label, string Template)> LoadAgentTemplates()
+    private static List<(string Id, string Category, string Label, string Template)> LoadAgentTemplates()
     {
         const string prefix = "agent-prompt/";
         var asm = typeof(Prompts).Assembly;
-        var list = new List<(string, string, string)>();
+        var list = new List<(string, string, string, string)>();
         foreach (var name in asm.GetManifestResourceNames().Where(n => n.StartsWith(prefix)).Order(StringComparer.Ordinal))
         {
             using var reader = new StreamReader(asm.GetManifestResourceStream(name)!);
@@ -169,7 +172,10 @@ public static class Prompts
             var nl = body.IndexOf('\n');
             if (nl < 0) continue;
             var id = Regex.Replace(Path.GetFileNameWithoutExtension(name[prefix.Length..]), @"^\d+-", "");
-            list.Add((id, body[..nl].TrimStart('#').Trim(), body[(nl + 1)..].Trim()));
+            var header = body[..nl].TrimStart('#').Trim();
+            var cut = header.IndexOf(" / ", StringComparison.Ordinal);
+            var (category, label) = cut < 0 ? ("", header) : (header[..cut].Trim(), header[(cut + 3)..].Trim());
+            list.Add((id, category, label, body[(nl + 1)..].Trim()));
         }
         return list;
     }
