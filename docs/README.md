@@ -4,6 +4,19 @@ Rewordly rewrites, proofreads, summarises, explains, translates, chats about or 
 
 ![Rewordly rewriting a rough message in a professional style, with the original shown above the result](images/hero.png)
 
+## Screenshots
+
+| | |
+| --- | --- |
+| ![The action menu at the pointer](images/action-menu.png) | ![The Rewrite in a style submenu](images/menu-styles.png) |
+| Select text, press `Ctrl+C` twice: the menu opens at your pointer. | 12 main styles, 5 extra styles and your own. |
+| ![The result window with Show original](images/result-show-original.png) | ![A translation into Spanish](images/result-translate.png) |
+| Compare, edit, regenerate, then paste back in place. | Translate into 27 languages or any language you type. |
+| ![The Chat window](images/chat-window.png) | ![The result window in the dark theme](images/result-correct-dark.png) |
+| Chat about the selected text with your own instruction. | System, light and dark themes. |
+| ![Settings, AI model tab](images/settings-ai-model.png) | ![Settings, Prompts tab](images/settings-prompts.png) |
+| Gemini, OpenAI, OpenRouter, Groq, Ollama or any OpenAI-compatible server. | Every prompt is editable, in 6 languages. |
+
 ## Guides
 
 | Guide | What it covers |
