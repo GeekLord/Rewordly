@@ -24,8 +24,8 @@ Maintain professional communication. Respect other contributors and follow court
 
 1. Clone the repository to your local computer:
    ```bash
-   git clone https://github.com/rewordly/rewordly.git
-   cd rewordly
+   git clone https://github.com/GeekLord/Rewordly.git
+   cd Rewordly
    ```
 
 2. Restore NuGet dependencies:

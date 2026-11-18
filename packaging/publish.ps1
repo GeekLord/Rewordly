@@ -5,13 +5,16 @@
     Builds single-file releases across all supported runtimes (Windows, macOS, Linux).
 .PARAMETER Targets
     Array of runtime identifiers to publish. Defaults to all six targets.
+.PARAMETER Version
+    Optional version stamped into the binaries (e.g. 2.1.0). Defaults to the csproj Version.
 .PARAMETER Configuration
     Build configuration (default: Release).
 #>
 [CmdletBinding()]
 param(
     [string[]]$Targets = @('win-x64', 'win-arm64', 'osx-x64', 'osx-arm64', 'linux-x64', 'linux-arm64'),
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+    [string]$Version
 )
 
 $ErrorActionPreference = 'Stop'
@@ -43,6 +46,7 @@ foreach ($target in $Targets) {
         '-p:EnableWindowsTargeting=true',
         '-o', $outDir
     )
+    if ($Version) { $args += "-p:Version=$Version" }
     
     & dotnet @args
     if ($LASTEXITCODE -ne 0) {

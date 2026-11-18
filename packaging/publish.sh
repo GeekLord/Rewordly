@@ -15,6 +15,7 @@ fi
 export DOTNET_NOLOGO=1
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 
+# Optional: VERSION=2.1.0 ./packaging/publish.sh stamps that version into the binaries.
 TARGETS=("linux-x64" "linux-arm64" "win-x64" "win-arm64" "osx-x64" "osx-arm64")
 
 if [ "$#" -gt 0 ]; then
@@ -35,6 +36,7 @@ for r in "${TARGETS[@]}"; do
     -p:EnableCompressionInSingleFile=true \
     -p:DebugType=none \
     -p:EnableWindowsTargeting=true \
+    ${VERSION:+"-p:Version=${VERSION}"} \
     -o "${PUB_DIR}/${r}"
   echo "==> Published ${r} successfully."
 done

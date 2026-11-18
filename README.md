@@ -1,7 +1,7 @@
 # Rewordly
 
-[![CI](https://github.com/rewordly/rewordly/actions/workflows/ci.yml/badge.svg)](https://github.com/rewordly/rewordly/actions/workflows/ci.yml)
-[![Release](https://github.com/rewordly/rewordly/actions/workflows/release.yml/badge.svg)](https://github.com/rewordly/rewordly/actions/workflows/release.yml)
+[![CI](https://github.com/GeekLord/Rewordly/actions/workflows/ci.yml/badge.svg)](https://github.com/GeekLord/Rewordly/actions/workflows/ci.yml)
+[![Release](https://github.com/GeekLord/Rewordly/actions/workflows/release.yml/badge.svg)](https://github.com/GeekLord/Rewordly/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET 8.0](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
@@ -27,6 +27,8 @@ The application uses C# with .NET 8, [Avalonia UI](https://avaloniaui.net/) for 
 - **Zero Cloud Intermediaries:** Transmit all requests directly from your machine to your chosen AI endpoint.
 
 ## Downloads
+
+Download the archive for your system from the [latest release](https://github.com/GeekLord/Rewordly/releases/latest). Each release also includes `SHA256SUMS.txt` for verifying the downloads.
 
 | Operating System | Architecture | Distribution Package | Execution Binary |
 | --- | --- | --- | --- |
@@ -188,8 +190,8 @@ You can configure an API key in the application Settings window or set environme
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/rewordly/rewordly.git
-   cd rewordly
+   git clone https://github.com/GeekLord/Rewordly.git
+   cd Rewordly
    ```
 2. Run automated tests:
    ```bash
@@ -199,11 +201,12 @@ You can configure an API key in the application Settings window or set environme
    ```bash
    dotnet run --project src/Rewordly.Desktop
    ```
-4. Build self-contained release packages:
+4. Build self-contained release packages for all six targets, or name only the ones you need (for example `./packaging/publish.sh linux-x64`). `VERSION` is optional and stamps that version into the binaries:
    ```bash
-   ./packaging/publish.sh
+   VERSION=2.0.0 ./packaging/publish.sh
    ./packaging/package.sh 2.0.0
    ```
+   **Expected result:** The archives and `SHA256SUMS.txt` are written to `dist/`.
 
 ### Procedure (PowerShell / Windows)
 
@@ -262,6 +265,36 @@ Compile and package the Rewordly single-file executable for Windows.
 - **Size:** Approximately 46 MB.
 - **Execution:** Double-click `Rewordly.exe` or execute `.\pub\win-x64\Rewordly.exe` from PowerShell or Command Prompt.
 
+## Releasing
+
+Releases are built by [`.github/workflows/release.yml`](.github/workflows/release.yml). One run tests the code, builds all six targets, creates the `vX.Y.Z` tag, publishes a GitHub Release with the archives and checksums, and pushes the `Rewordly.Core` NuGet package to GitHub Packages.
+
+### Procedure
+
+1. Under `## [Unreleased]` in `CHANGELOG.md`, list what changed, then commit and push to `main`. That section becomes the top of the release notes, followed by the notes GitHub generates from merged pull requests.
+2. Start the release with one of these methods:
+   - **GitHub website:** **Actions** › **Release** › **Run workflow**, then choose `major`, `minor` or `patch`.
+   - **GitHub CLI:**
+     ```bash
+     gh workflow run release.yml -f bump=major    # 2.4.1 -> 3.0.0, for breaking or major changes
+     gh workflow run release.yml -f bump=minor    # 2.4.1 -> 2.5.0, for new features
+     gh workflow run release.yml -f bump=patch    # 2.4.1 -> 2.4.2, for fixes
+     gh workflow run release.yml -f tag_name=v3.0.0-beta.1   # exact version; a "-suffix" marks it as a pre-release
+     ```
+   - **Git tag:** `git tag v3.0.0 && git push origin v3.0.0`.
+3. Nothing else to do. After the release is published, the workflow commits `chore(release): vX.Y.Z` to `main`. That commit updates the version in this README (download names and commands), in both `.csproj` files and in `packaging/Info.plist`, and turns `## [Unreleased]` in `CHANGELOG.md` into `## [X.Y.Z] - date` under a new empty `## [Unreleased]`. Pre-releases skip this step. Run `git pull` afterwards. Locally, `./packaging/stamp-version.sh X.Y.Z` makes the same edits.
+
+The new version is the latest `v*` tag plus the bump you choose. If no tag exists yet, the first release uses the `<Version>` in `src/Rewordly.Desktop/Rewordly.Desktop.csproj` (currently 2.0.0). The run stops if the tag already exists.
+
+### Using the Rewordly.Core package
+
+`Rewordly.Core` (prompt templates, settings and AI provider clients) is published to [GitHub Packages](https://github.com/GeekLord?tab=packages&repo_name=Rewordly). GitHub Packages requires sign-in even for public packages, so you need a personal access token with the `read:packages` scope:
+
+```bash
+dotnet nuget add source https://nuget.pkg.github.com/GeekLord/index.json --name github-geeklord --username <your-github-user> --password <token>
+dotnet add package Rewordly.Core
+```
+
 ---
 
 ## Project Structure
@@ -274,10 +307,12 @@ Compile and package the Rewordly single-file executable for Windows.
 ├── packaging/
 │   ├── Info.plist            # macOS bundle configuration
 │   ├── install-linux.sh      # Linux user installation script
+│   ├── next-version.sh       # Computes the next release version from git tags
 │   ├── package.ps1           # Windows PowerShell packaging script
 │   ├── package.sh            # Linux/macOS bash packaging script
 │   ├── publish.ps1           # Windows PowerShell publish script
 │   ├── publish.sh            # Linux/macOS bash publish script
+│   ├── stamp-version.sh      # Writes a released version into README, csproj, Info.plist, CHANGELOG
 │   └── rewordly.desktop      # Linux XDG desktop entry
 ├── prompts/                  # Contributable prompt templates (AI agent prompt variants)
 ├── src/

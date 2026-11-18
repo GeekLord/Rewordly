@@ -54,7 +54,7 @@ for r in osx-x64 osx-arm64; do
     chmod 755 "${APP_DIR}/Contents/MacOS/Rewordly"
 
     cp "${ASSETS_DIR}/Rewordly.icns" "${APP_DIR}/Contents/Resources/"
-    cp "${PACKAGING_DIR}/Info.plist" "${APP_DIR}/Contents/"
+    sed -E "/CFBundle(Short)?Version/s#<string>[^<]*</string>#<string>${VERSION}</string>#" "${PACKAGING_DIR}/Info.plist" > "${APP_DIR}/Contents/Info.plist"
 
     # Ad-hoc sign macOS bundle
     if command -v codesign >/dev/null 2>&1; then

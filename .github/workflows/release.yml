@@ -4,15 +4,26 @@ on:
   push:
     tags:
       - 'v*'
+  # Actions tab > Release > Run workflow, or: gh workflow run release.yml -f bump=major
   workflow_dispatch:
     inputs:
+      bump:
+        description: 'Version bump from the latest v* tag (ignored when a version is given)'
+        type: choice
+        options: [major, minor, patch]
+        default: minor
       tag_name:
-        description: 'Release tag name (e.g. v2.0.0)'
+        description: 'Exact version instead (e.g. v2.0.0 or v2.1.0-beta.1). Leave empty to bump.'
         required: false
         default: ''
 
 permissions:
-  contents: write
+  contents: write   # create the tag and the release
+  packages: write   # push Rewordly.Core to GitHub Packages
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build-release:
@@ -53,35 +64,67 @@ jobs:
       - name: Determine version
         id: get_version
         run: |
-          RAW_TAG="${{ github.event.inputs.tag_name }}"
-          if [ -z "$RAW_TAG" ]; then
-            RAW_TAG="${{ github.ref_name }}"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$(bash packaging/next-version.sh "${{ inputs.bump }}" "${{ inputs.tag_name }}")"
           fi
-          VERSION="${RAW_TAG#v}"
-          if [ -z "$VERSION" ]; then
-            VERSION="2.0.0"
-          fi
+          echo "Releasing $VERSION"
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "TAG_NAME=$RAW_TAG" >> "$GITHUB_OUTPUT"
+          echo "TAG_NAME=v$VERSION" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in *-*) echo "PRERELEASE=true" ;; *) echo "PRERELEASE=false" ;; esac >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from CHANGELOG [Unreleased]
+        run: |
+          mkdir -p dist
+          awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' CHANGELOG.md > dist/RELEASE_NOTES.md
+          cat dist/RELEASE_NOTES.md
 
       - name: Publish all targets
         run: |
           chmod +x packaging/publish.sh packaging/package.sh
-          ./packaging/publish.sh
+          VERSION="${{ steps.get_version.outputs.VERSION }}" ./packaging/publish.sh
 
       - name: Package all releases
         run: |
           ./packaging/package.sh "${{ steps.get_version.outputs.VERSION }}"
 
+      - name: Pack Rewordly.Core NuGet package
+        run: dotnet pack src/Rewordly.Core/Rewordly.Core.csproj -c Release -p:Version=${{ steps.get_version.outputs.VERSION }} -o dist/nupkg
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+          target_commitish: ${{ github.sha }}   # creates the tag here when run from the Actions button
           name: Rewordly ${{ steps.get_version.outputs.VERSION }}
+          body_path: dist/RELEASE_NOTES.md
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.get_version.outputs.PRERELEASE }}
           files: |
             dist/*.zip
             dist/*.tar.gz
             dist/SHA256SUMS.txt
+            dist/nupkg/*.nupkg
+
+      - name: Publish Rewordly.Core to GitHub Packages
+        run: >
+          dotnet nuget push "dist/nupkg/*.nupkg"
+          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          --api-key "${{ secrets.GITHUB_TOKEN }}"
+          --skip-duplicate
+
+      - name: Update README, versions and CHANGELOG on main
+        if: steps.get_version.outputs.PRERELEASE == 'false'   # pre-releases do not change the download docs
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B main origin/main
+          bash packaging/stamp-version.sh "$VERSION"
+          git add README.md CHANGELOG.md packaging/Info.plist src/Rewordly.Desktop/Rewordly.Desktop.csproj src/Rewordly.Core/Rewordly.Core.csproj
+          if git diff --cached --quiet; then echo "Nothing to update"; exit 0; fi
+          git commit -m "chore(release): v$VERSION [skip ci]"
+          git push origin main
