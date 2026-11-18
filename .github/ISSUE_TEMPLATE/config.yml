@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: GitHub Discussions
-    url: https://github.com/rewordly/rewordly/discussions
-    about: Ask questions, share feedback, and discuss features with the community.
+  - name: Report a security vulnerability
+    url: https://github.com/GeekLord/Rewordly/security/advisories/new
+    about: Report security issues privately, not in a public issue.
+  - name: Contact the developer
+    url: https://shobhit.net
+    about: Questions and feedback for Shobhit Kumar Prabhakar, the developer of Rewordly.

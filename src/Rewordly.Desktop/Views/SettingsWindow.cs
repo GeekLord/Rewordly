@@ -201,6 +201,7 @@ internal sealed class SettingsWindow : Window
             {
                 Ui.Text("Rewordly " + AppVersion, bold: true, size: 20),
                 Ui.Text("Rewrite, fix, summarise, explain, translate, chat about and listen to any selected text, in any app, on Windows, macOS and Linux.", muted: true),
+                Ui.Text("By Shobhit Kumar Prabhakar", muted: true),
             },
         };
         Grid.SetColumn(brandText, 1);
@@ -226,6 +227,10 @@ internal sealed class SettingsWindow : Window
                 Ui.Row(Ui.Btn("Open settings folder", () => { Directory.CreateDirectory(_app.Store.Folder); Os.Open(_app.Store.Folder); }, icon: "FolderOpen"), Ui.Btn("Quick guide", _app.ShowGuide, icon: "BookOpen", hue: "Orange")),
                 Ui.Section("Privacy", "ShieldLock", "Green"),
                 Ui.Text("Your text is sent only to the AI provider you choose. Nothing is sent anywhere else.", muted: true),
+                Ui.Section("Developer", "Lightbulb", "Orange"),
+                Ui.Text("Rewordly is developed by Shobhit Kumar Prabhakar."),
+                Ui.Row(Ui.Btn("Visit shobhit.net", () => Os.Open("https://shobhit.net"), icon: "Globe", hue: "Blue"),
+                    Ui.Btn("Rewordly on GitHub", () => Os.Open("https://github.com/GeekLord/Rewordly"), icon: "Code")),
             },
         };
 

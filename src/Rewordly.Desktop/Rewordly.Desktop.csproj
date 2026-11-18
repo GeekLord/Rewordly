@@ -10,6 +10,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Version>2.1.1</Version>
     <Product>Rewordly</Product>
+    <Authors>Shobhit Kumar Prabhakar</Authors>
+    <Company>Shobhit Kumar Prabhakar</Company>
+    <Copyright>Copyright (c) 2026 Shobhit Kumar Prabhakar</Copyright>
     <Description>AI text rewriting from any app on Windows, macOS and Linux</Description>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
     <NoWarn>$(NoWarn);CA1416</NoWarn>

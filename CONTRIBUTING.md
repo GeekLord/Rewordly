@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document explains how to contribute to the Rewordly project.
+This document explains how to contribute to the Rewordly project. Rewordly is developed and maintained by [Shobhit Kumar Prabhakar](https://shobhit.net); pull requests and issues are welcome on [GitHub](https://github.com/GeekLord/Rewordly).
 
 ## Prerequisites
 

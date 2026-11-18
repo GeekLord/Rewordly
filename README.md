@@ -1,30 +1,62 @@
 # Rewordly
 
+[![Latest release](https://img.shields.io/github/v/release/GeekLord/Rewordly?label=release)](https://github.com/GeekLord/Rewordly/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/GeekLord/Rewordly/total)](https://github.com/GeekLord/Rewordly/releases)
 [![CI](https://github.com/GeekLord/Rewordly/actions/workflows/ci.yml/badge.svg)](https://github.com/GeekLord/Rewordly/actions/workflows/ci.yml)
 [![Release](https://github.com/GeekLord/Rewordly/actions/workflows/release.yml/badge.svg)](https://github.com/GeekLord/Rewordly/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET 8.0](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
+[![Avalonia UI](https://img.shields.io/badge/UI-Avalonia%2011-8b44ac.svg)](https://avaloniaui.net/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#downloads)
+[![Developer](https://img.shields.io/badge/Developer-Shobhit%20Kumar%20Prabhakar-orange.svg)](https://shobhit.net)
 
-Rewordly is an independent, cross-platform desktop application for AI text rewriting. Rewordly integrates with all text applications on Windows, macOS, and Linux.
+**Rewrite, proofread, summarise, explain, translate, chat about or read aloud any selected text, in any app.** Select text, press `Ctrl+C` twice (`Cmd+C` on macOS), and a Rewordly menu opens at your pointer. Pick an action, review the result, and paste it back in place.
 
-The application uses C# with .NET 8, [Avalonia UI](https://avaloniaui.net/) for user interface controls, and [SharpHook](https://github.com/TolikPylypchuk/SharpHook) for system-wide keyboard event handling. Rewordly is an independent codebase and does not require third-party runtime dependencies on client machines.
+Rewordly is an independent, cross-platform desktop application for Windows, macOS and Linux. It is written in C# with .NET 8, [Avalonia UI](https://avaloniaui.net/) for the interface and [SharpHook](https://github.com/TolikPylypchuk/SharpHook) for system-wide keyboard handling. Each download is a single self-contained executable: no .NET runtime or other dependency is needed on the user's machine.
 
-## Architecture and Core Features
+Developed by **[Shobhit Kumar Prabhakar](https://shobhit.net)**.
 
-- **Context Menu at Cursor:** Trigger the menu at the mouse pointer location after you press the copy shortcut twice.
-- **Text Styles:** Apply 12 core styles (Formal, Informal, Technical, Academic, and others) or custom user styles.
-- **AI Agent Prompts:** Rewrite a rough request into a well-structured prompt for a general agent, a coding agent, a research agent, a system prompt, or a chat assistant, plus an **Image AI** section for image generation and image editing prompts. Templates live in [`prompts/`](prompts/README.md).
-- **Proofreading:** Select **Correct and improve** or **Fix errors only**.
-- **Summarization:** Generate summaries at 70%, 50%, or 30% length budgets.
-- **Explanation:** Generate explanations tailored to four knowledge levels (None, Basic, Intermediate, Advanced).
-- **Translation:** Translate text into 27 supported languages or any custom language.
-- **Interactive Result Window:** Edit the output text, display the original input, or replace text directly into the source window.
-- **Interactive Chat:** Provide custom instructions and maintain multi-turn prompt history.
-- **Read Aloud (Listen):** Read text aloud using local operating system speech synthesizers.
-- **Multiple AI Providers:** Connect to Google Gemini, OpenAI, OpenRouter, Groq, local Ollama instances, or any OpenAI-compatible server.
-- **Encrypted Credential Storage:** Store API keys in Windows DPAPI, macOS Keychain, or Linux Secret Service (freedesktop secret service API).
-- **Zero Cloud Intermediaries:** Transmit all requests directly from your machine to your chosen AI endpoint.
+## Features
+
+### Text actions
+
+- **Context menu at the pointer:** press the copy shortcut twice in any app, or use the alternative shortcut that leaves the clipboard unchanged.
+- **Rewrite in a style:** 12 main styles (Formal, Informal, Technical, Academic and more), 5 extra styles (Narrative, Descriptive, Expository, Poetic, Satirical) and your own custom styles. Recently used styles appear first.
+- **Proofreading:** **Correct and improve** for clarity and flow, or **Fix errors only** to keep your wording.
+- **Summary:** short, medium or long summaries (about 30%, 50% or 70% of the original length).
+- **Explain:** explanations for four knowledge levels: None, Basic, Intermediate and Advanced.
+- **Translate:** 27 built-in languages plus any language you add, with recently used languages first.
+- **Rewrite as AI agent prompt:** turn a rough request into a structured prompt for a general agent, a coding agent, a research agent, a system prompt or a chat assistant, plus an **Image AI** section for image generation and image editing prompts. Templates live in [`prompts/`](prompts/README.md).
+- **Chat:** give your own instruction about the selected text, with prompt history, copy and paste-back.
+- **Listen:** read text aloud with your operating system's voices, with speed control and language detection.
+
+### Result window
+
+- Compare the result with the original text, edit it, copy it, or **Paste and replace** it into the app you came from (`Ctrl+Enter` / `Cmd+Enter`).
+- **Regenerate** (`Ctrl+R` / `Cmd+R`), translate the result into another language and **Undo translation**, or listen to it.
+
+### AI providers
+
+- Presets for **Google Gemini, OpenAI, OpenRouter, Groq** and local **Ollama**, plus any **OpenAI-compatible server**.
+- Model list loaded from the provider, recent models in the tray menu, **Test connection**, and advanced settings for API address, temperature and timeout.
+- API keys can also come from environment variables (see [AI Provider Configuration](#ai-provider-configuration)).
+
+### Personalisation
+
+- **Prompt editor:** every prompt is editable under **Settings › Prompts**, with **Reset to default**. Built-in prompts are available in English, Italian, Spanish, French, German and Hindi.
+- System, light and dark themes; start at login; pause shortcuts from the tray icon; adjustable double-copy interval and selection word limit; optional clipboard restore after each action.
+- A **Quick guide** with the steps for your operating system.
+
+### Privacy and security
+
+- **No Rewordly cloud:** your text goes straight from your computer to the AI provider you choose, and nowhere else.
+- **Encrypted key storage:** Windows DPAPI, macOS Keychain, or Linux Secret Service (with an encrypted local file as fallback).
+- **Verifiable downloads:** each release includes `SHA256SUMS.txt`; macOS app bundles are ad-hoc signed.
+
+### For developers
+
+- Automated GitHub Releases for six targets (Windows, macOS and Linux on x64 and ARM64) from a single **Run workflow** button. See [Releasing](#releasing).
+- The `Rewordly.Core` library (prompts, settings and AI provider clients) is published as a NuGet package on [GitHub Packages](#using-the-rewordlycore-package).
 
 ## Downloads
 
@@ -362,6 +394,16 @@ dotnet add package Rewordly.Core
 
 ---
 
+## Developer
+
+Rewordly is developed and maintained by **Shobhit Kumar Prabhakar**.
+
+- Website: [shobhit.net](https://shobhit.net)
+- GitHub: [@GeekLord](https://github.com/GeekLord)
+- Issues and feature requests: [GitHub Issues](https://github.com/GeekLord/Rewordly/issues)
+
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE). Copyright (c) 2026 Shobhit Kumar Prabhakar.
