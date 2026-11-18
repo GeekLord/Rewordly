@@ -58,7 +58,7 @@ Your edited prompts are kept when you update Rewordly; new built-in prompts only
 
 | Item | Windows | macOS | Linux |
 | --- | --- | --- | --- |
-| Settings file | `%APPDATA%\Rewordly\settings.json` | `~/Library/Application Support/Rewordly/settings.json` | `~/.config/rewordly/settings.json` |
+| Settings file | `%APPDATA%\Rewordly\settings.json` | `~/Library/Application Support/Rewordly/settings.json` | `~/.config/Rewordly/settings.json` (or `$XDG_CONFIG_HOME/Rewordly/`) |
 | API keys | Windows DPAPI | macOS Keychain | Secret Service or encrypted local file |
 | Start at login | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` | `~/Library/LaunchAgents/com.rewordly.app.plist` | `~/.config/autostart/rewordly.desktop` |
 

@@ -27,6 +27,7 @@ internal sealed class SettingsWindow : Window
     internal readonly CheckBox ShowKey, DefaultTemp, StartAtLogin, DoubleCopy, AltShortcut, RestoreClip;
     internal readonly NumericUpDown Temp, Timeout, WindowMs, MaxWords;
     internal readonly Expander Advanced;
+    private readonly Button _getKey;
     private string _promptKey = Prompts.KeyStyle;
 
     public SettingsWindow(AppController app)
@@ -44,8 +45,7 @@ internal sealed class SettingsWindow : Window
         ApiKey = new TextBox { MinWidth = 420, PasswordChar = '•' };
         ShowKey = new CheckBox { Content = "Show", Margin = new Thickness(8, 0, 0, 0) };
         ShowKey.IsCheckedChanged += (_, _) => ApiKey.PasswordChar = ShowKey.IsChecked == true ? '\0' : '•';
-        var getKey = Ui.Btn("Get a key", icon: "Key", hue: "Pink", onClick: () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
-        ToolTip.SetTip(getKey, "Opens the provider's page where you can create an API key.");
+        _getKey = Ui.Btn("Get a key", icon: "Key", hue: "Pink", onClick: () => { var u = ProviderPresets.Get(_provider).KeyHelpUrl; if (u.Length > 0) Os.Open(u); });
         KeyInfo = Ui.Hint("");
         Model = new TextBox { MinWidth = 420 };
         ModelList = new ComboBox { MinWidth = 280, PlaceholderText = "Pick from available models", Margin = new Thickness(0, 0, 8, 6) };
@@ -66,6 +66,8 @@ internal sealed class SettingsWindow : Window
             StoreProviderFields();
             _provider = ProviderPresets.All[ProviderBox.SelectedIndex].Id;
             LoadProviderFields();
+            // Ollama is local and needs no key, so its model list can load straight away.
+            if (_provider == "ollama" && string.IsNullOrWhiteSpace(Model.Text)) _ = RefreshModelsAsync();
         };
 
         ShowKey.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
@@ -95,7 +97,7 @@ internal sealed class SettingsWindow : Window
             Children =
             {
                 providerHead, ProviderBox, ProviderNotes,
-                Ui.Section("API key", "Key", "Pink"), Ui.Row(ApiKey, ShowKey, getKey), KeyInfo,
+                Ui.Section("API key", "Key", "Pink"), Ui.Row(ApiKey, ShowKey, _getKey), KeyInfo,
                 Ui.Section("Model", "BrainCircuit", "Violet"), Model, Ui.Row(ModelList, refresh),
                 Ui.Hint("Type a model name, or click Refresh list and pick one."),
                 Ui.Row(test), TestStatus,
@@ -312,6 +314,10 @@ internal sealed class SettingsWindow : Window
         ModelList.ItemsSource = cfg.RecentModels.ToList();
         Model.Watermark = p.DefaultModel.Length > 0 ? p.DefaultModel : "Model name";
         TestStatus.Text = "";
+        // Keyless providers (Ollama) link to their download page instead of a key page; Custom has no link.
+        _getKey.IsVisible = p.KeyHelpUrl.Length > 0;
+        _getKey.Content = Ui.BtnContent(p.NeedsKey ? "Get a key" : "Get " + p.Name.Split(' ')[0], p.NeedsKey ? "Key" : "Globe", "Pink");
+        ToolTip.SetTip(_getKey, p.NeedsKey ? "Opens the provider's page where you can create an API key." : $"Opens the {p.Name.Split(' ')[0]} download page.");
         // Open Advanced when the address matters: a custom server, or an address changed from the default.
         var customUrl = cfg.BaseUrl.Trim().TrimEnd('/');
         if (p.Id == "custom" || (customUrl.Length > 0 && customUrl != p.DefaultBaseUrl)) Advanced.IsExpanded = true;
@@ -361,10 +367,20 @@ internal sealed class SettingsWindow : Window
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var forProvider = _provider;
             var models = await FormClient().ListModelsAsync(cts.Token);
+            if (forProvider != _provider) return; // the user switched provider while the list was loading
             ModelList.ItemsSource = models.ToList();
-            TestStatus.Text = models.Count > 0 ? $"{models.Count} models found. Pick one from the list." : "No models were returned. Type the model name yourself.";
-            if (models.Count > 0) ModelList.IsDropDownOpen = true;
+            if (models.Count == 1 && string.IsNullOrWhiteSpace(Model.Text))
+            {
+                Model.Text = models[0];
+                TestStatus.Text = $"Found {models[0]} and selected it.";
+            }
+            else
+            {
+                TestStatus.Text = models.Count > 0 ? $"{models.Count} models found. Pick one from the list." : "No models were returned. Type the model name yourself.";
+                if (models.Count > 0) ModelList.IsDropDownOpen = true;
+            }
         }
         catch (Exception ex) { TestStatus.Text = "Could not load models: " + ex.Message + " Check the API key and API address, or type the model name yourself."; }
     }

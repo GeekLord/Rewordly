@@ -209,6 +209,23 @@ public class TextTests
     }
 
     [Fact]
+    public void Strips_chatty_preamble_and_wrapping_quotes()
+    {
+        // Real llama3.2:3b reply to Rewrite in a style › Friendly.
+        Assert.Equal("We're experiencing an issue with our login page.",
+            TextUtil.CleanModelOutput("Here's a revised version of the text in a friendly style:\n\n\"We're experiencing an issue with our login page.\"", "the login page crashes"));
+        Assert.Equal("Hola, equipo.", TextUtil.CleanModelOutput("Sure! Here is the translation:\nHola, equipo.", "Hi team."));
+        Assert.Equal("Bonjour", TextUtil.CleanModelOutput("“Bonjour”", "Hello"));
+
+        // Left alone: real content that happens to start with "Here is", a quoted original, and quotes inside the text.
+        var context = "Here is the context:\nThe app is a React site.";
+        Assert.Equal(context.Replace("\n", Environment.NewLine), TextUtil.CleanModelOutput(context, "context"));
+        Assert.Equal("\"Hello\"", TextUtil.CleanModelOutput("\"Hello\"", "\"hello\""));
+        Assert.Equal("\"Hi,\" she said. \"Bye.\"", TextUtil.CleanModelOutput("\"Hi,\" she said. \"Bye.\"", "hi she said bye"));
+        Assert.Equal("Here is the revised text:", TextUtil.CleanModelOutput("Here is the revised text:", "x"));
+    }
+
+    [Fact]
     public void Collapses_blank_lines()
     {
         var r = TextUtil.NormalizeBlankLines("a\n  \n\n\n\nb");

@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation in `docs/`: Getting started, Using Rewordly, AI providers, Settings and Troubleshooting guides with screenshots, plus a screenshot gallery in the README.
 - README: full feature list, release and download badges, and a Developer section; updated LICENSE, SECURITY, CONTRIBUTING and issue template contacts.
 
+### Changed
+
+- Results no longer start with a chatty opening such as "Here's a revised version of the text:" or come wrapped in quotes; small local models often add both.
+- Choosing Ollama in Settings loads its model list straight away and selects the model if only one is installed.
+- The key button reads **Get Ollama** for Ollama (it opens the download page) and is hidden for custom servers.
+
+### Fixed
+
+- Docs gave the Linux settings folder as `~/.config/rewordly`; it is `~/.config/Rewordly` (or `$XDG_CONFIG_HOME/Rewordly`).
+- Rewordly's menu, progress and notification popups appeared as "Window" in some Linux taskbars; they are now titled "Rewordly".
+
 ## [2.1.1] - 2026-11-18
 
 ### Fixed

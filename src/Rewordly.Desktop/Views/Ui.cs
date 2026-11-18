@@ -413,6 +413,7 @@ internal sealed class Toast : Window
 
     private Toast(string message, bool warning)
     {
+        Title = "Rewordly";
         SystemDecorations = SystemDecorations.None;
         ShowInTaskbar = false;
         Topmost = true;
@@ -472,6 +473,7 @@ internal sealed class MenuHost : Window
 
     public MenuHost()
     {
+        Title = "Rewordly";
         SystemDecorations = SystemDecorations.None;
         ShowInTaskbar = false;
         Topmost = true;
@@ -499,6 +501,7 @@ internal sealed class BusyWindow : Window
 
     public BusyWindow(string action, string model, Action onCancel)
     {
+        Title = "Rewordly";
         SystemDecorations = SystemDecorations.BorderOnly;
         ShowInTaskbar = false;
         Topmost = true;

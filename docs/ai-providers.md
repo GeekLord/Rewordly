@@ -53,7 +53,7 @@ Open **Advanced: API address, temperature, timeout** on the AI model tab to chan
    ```bash
    ollama pull llama3.2
    ```
-3. In **Settings › AI model**, choose **Ollama (local, offline)**, click **Refresh list**, pick the model and click **Save**.
+3. In **Settings › AI model**, choose **Ollama (local, offline)**. Rewordly loads your installed models and selects the model if there is only one; otherwise pick one from the list. Click **Save**.
 
 Small models such as `llama3.2:3b` are fast and good for corrections, translations and short rewrites. For long texts or **Rewrite as AI agent prompt**, a larger model (or a cloud model) follows the instructions more closely.
 

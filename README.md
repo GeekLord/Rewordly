@@ -211,9 +211,8 @@ You can configure an API key in the application Settings window or set environme
    ```
 3. Open Rewordly Settings.
 4. Select **Ollama (local, offline)** in the Provider list.
-5. Select **Refresh list**.
-6. Select `llama3.2` from the Model dropdown list.
-7. Select **Save**.
+5. Rewordly loads your installed models automatically. If `llama3.2` is the only one, it is already selected; otherwise select it from the Model dropdown list (or click **Refresh list**).
+6. Select **Save**.
 
 ---
 
@@ -221,7 +220,7 @@ You can configure an API key in the application Settings window or set environme
 
 | Item | Windows | macOS | Linux |
 | --- | --- | --- | --- |
-| Configuration file | `%APPDATA%\Rewordly\settings.json` | `~/Library/Application Support/Rewordly/settings.json` | `~/.config/rewordly/settings.json` |
+| Configuration file | `%APPDATA%\Rewordly\settings.json` | `~/Library/Application Support/Rewordly/settings.json` | `~/.config/Rewordly/settings.json` (or `$XDG_CONFIG_HOME/Rewordly/`) |
 | Encrypted credentials | Windows DPAPI | macOS Keychain (`security`) | Linux Secret Service or local AES-256-GCM file |
 | Autostart entry | Registry (`HKCU\...\Run`) | `~/Library/LaunchAgents/com.rewordly.app.plist` | `~/.config/autostart/rewordly.desktop` |
 | Speech synthesizer | Windows SAPI voices | macOS `say` utility | `espeak-ng`, `espeak`, or `spd-say` |
