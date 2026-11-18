@@ -32,12 +32,12 @@ Download the archive for your system from the [latest release](https://github.co
 
 | Operating System | Architecture | Distribution Package | Execution Binary |
 | --- | --- | --- | --- |
-| Windows 10/11 | x64 (Intel / AMD) | `Rewordly-2.0.0-win-x64.zip` | `Rewordly.exe` (Self-contained) |
-| Windows 11 | ARM64 | `Rewordly-2.0.0-win-arm64.zip` | `Rewordly.exe` (Self-contained) |
-| macOS 11+ | ARM64 (Apple Silicon M1–M4) | `Rewordly-2.0.0-osx-arm64.zip` | `Rewordly.app` (Ad-hoc signed) |
-| macOS 11+ | x64 (Intel) | `Rewordly-2.0.0-osx-x64.zip` | `Rewordly.app` (Ad-hoc signed) |
-| Linux (X11) | x64 | `Rewordly-2.0.0-linux-x64.tar.gz` | `Rewordly` (Single executable) |
-| Linux (X11) | ARM64 | `Rewordly-2.0.0-linux-arm64.tar.gz` | `Rewordly` (Single executable) |
+| Windows 10/11 | x64 (Intel / AMD) | `Rewordly-2.1.0-win-x64.zip` | `Rewordly.exe` (Self-contained) |
+| Windows 11 | ARM64 | `Rewordly-2.1.0-win-arm64.zip` | `Rewordly.exe` (Self-contained) |
+| macOS 11+ | ARM64 (Apple Silicon M1–M4) | `Rewordly-2.1.0-osx-arm64.zip` | `Rewordly.app` (Ad-hoc signed) |
+| macOS 11+ | x64 (Intel) | `Rewordly-2.1.0-osx-x64.zip` | `Rewordly.app` (Ad-hoc signed) |
+| Linux (X11) | x64 | `Rewordly-2.1.0-linux-x64.tar.gz` | `Rewordly` (Single executable) |
+| Linux (X11) | ARM64 | `Rewordly-2.1.0-linux-arm64.tar.gz` | `Rewordly` (Single executable) |
 
 ## Keyboard Shortcuts
 
@@ -62,7 +62,7 @@ Install and execute Rewordly on Windows 10 or Windows 11.
 - Windows 10 64-bit (build 19041 or higher) or Windows 11.
 
 #### Procedure
-1. Extract `Rewordly-2.0.0-win-x64.zip` (or the ARM64 archive) to an installation directory.
+1. Extract `Rewordly-2.1.0-win-x64.zip` (or the ARM64 archive) to an installation directory.
 2. Execute `Rewordly.exe`.
 3. If Windows SmartScreen displays a warning, select **More info**, then select **Run anyway**.
 4. Configure your preferred AI provider in the Settings window.
@@ -84,7 +84,7 @@ Install and configure Rewordly on macOS.
 - macOS 11 (Big Sur) or newer.
 
 #### Procedure
-1. Extract `Rewordly-2.0.0-osx-arm64.zip` (or Intel `osx-x64.zip`).
+1. Extract `Rewordly-2.1.0-osx-arm64.zip` (or Intel `osx-x64.zip`).
 2. Move `Rewordly.app` to your `/Applications` directory.
 3. If macOS blocks initial launch, remove the quarantine attribute in Terminal:
    ```bash
@@ -118,8 +118,8 @@ Install and configure Rewordly on Linux desktop environments.
    ```
 2. Extract the archive:
    ```bash
-   tar -xzf Rewordly-2.0.0-linux-x64.tar.gz
-   cd Rewordly-2.0.0-linux-x64
+   tar -xzf Rewordly-2.1.0-linux-x64.tar.gz
+   cd Rewordly-2.1.0-linux-x64
    ```
 3. Run the installation script:
    ```bash
@@ -203,8 +203,8 @@ You can configure an API key in the application Settings window or set environme
    ```
 4. Build self-contained release packages for all six targets, or name only the ones you need (for example `./packaging/publish.sh linux-x64`). `VERSION` is optional and stamps that version into the binaries:
    ```bash
-   VERSION=2.0.0 ./packaging/publish.sh
-   ./packaging/package.sh 2.0.0
+   VERSION=2.1.0 ./packaging/publish.sh
+   ./packaging/package.sh 2.1.0
    ```
    **Expected result:** The archives and `SHA256SUMS.txt` are written to `dist/`.
 
@@ -254,9 +254,9 @@ Compile and package the Rewordly single-file executable for Windows.
    ```
 9. Package release zip archives and compute SHA-256 checksums:
    ```powershell
-   .\packaging\package.ps1 -Version "2.0.0"
+   .\packaging\package.ps1 -Version "2.1.0"
    ```
-   **Expected result:** The archive `dist\Rewordly-2.0.0-win-x64.zip` and the checksum file `dist\SHA256SUMS.txt` are generated.
+   **Expected result:** The archive `dist\Rewordly-2.1.0-win-x64.zip` and the checksum file `dist\SHA256SUMS.txt` are generated.
 
 #### Windows Binary Details
 - **Binary path:** `pub\win-x64\Rewordly.exe` (or `pub\win-arm64\Rewordly.exe`)
@@ -284,7 +284,7 @@ Releases are built by [`.github/workflows/release.yml`](.github/workflows/releas
    - **Git tag:** `git tag v3.0.0 && git push origin v3.0.0`.
 3. Nothing else to do. After the release is published, the workflow commits `chore(release): vX.Y.Z` to `main`. That commit updates the version in this README (download names and commands), in both `.csproj` files and in `packaging/Info.plist`, and turns `## [Unreleased]` in `CHANGELOG.md` into `## [X.Y.Z] - date` under a new empty `## [Unreleased]`. Pre-releases skip this step. Run `git pull` afterwards. Locally, `./packaging/stamp-version.sh X.Y.Z` makes the same edits.
 
-The new version is the latest `v*` tag plus the bump you choose. If no tag exists yet, the first release uses the `<Version>` in `src/Rewordly.Desktop/Rewordly.Desktop.csproj` (currently 2.0.0). The run stops if the tag already exists.
+The new version is the latest `v*` tag plus the bump you choose. If no tag exists yet, the first release uses the `<Version>` in `src/Rewordly.Desktop/Rewordly.Desktop.csproj` (currently 2.1.0). The run stops if the tag already exists.
 
 ### Using the Rewordly.Core package
 

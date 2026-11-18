@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-18
+
 ### Added
 
 - **Rewrite as AI agent prompt** action menu entry with five variants: General agent, Coding agent, Research agent, System prompt, and Chat assistant, plus an **Image AI** section with Image generation and Image editing.

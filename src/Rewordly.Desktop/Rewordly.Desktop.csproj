@@ -8,7 +8,7 @@
     <AssemblyName>Rewordly</AssemblyName>
     <ApplicationIcon>Assets/Rewordly.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Product>Rewordly</Product>
     <Description>AI text rewriting from any app on Windows, macOS and Linux</Description>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
