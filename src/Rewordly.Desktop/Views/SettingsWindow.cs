@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,6 +11,10 @@ namespace Rewordly.Desktop.Views;
 /// <summary>AI provider/model, shortcuts and behaviour, prompt editor, about.</summary>
 internal sealed class SettingsWindow : Window
 {
+    // Release builds stamp this via -p:Version; drop the "+commit" suffix the SDK appends.
+    private static readonly string AppVersion =
+        typeof(SettingsWindow).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
+
     private readonly AppController _app;
     private readonly AppSettings _work;
     private readonly Dictionary<string, string?> _pendingKeys = new(StringComparer.OrdinalIgnoreCase);
@@ -194,7 +199,7 @@ internal sealed class SettingsWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             Children =
             {
-                Ui.Text("Rewordly 2.0.0", bold: true, size: 20),
+                Ui.Text("Rewordly " + AppVersion, bold: true, size: 20),
                 Ui.Text("Rewrite, fix, summarise, explain, translate, chat about and listen to any selected text, in any app, on Windows, macOS and Linux.", muted: true),
             },
         };
