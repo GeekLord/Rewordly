@@ -16,6 +16,10 @@ Rewordly is an independent, cross-platform desktop application for Windows, macO
 
 Developed by **[Shobhit Kumar Prabhakar](https://shobhit.net)**.
 
+![Rewordly rewriting a rough message in a professional style, with the original shown above the result](docs/images/hero.png)
+
+**[Documentation](docs/README.md)** · [Getting started](docs/getting-started.md) · [Using Rewordly](docs/using-rewordly.md) · [AI providers](docs/ai-providers.md) · [Settings](docs/settings.md) · [Troubleshooting](docs/troubleshooting.md)
+
 ## Features
 
 ### Text actions
@@ -57,6 +61,21 @@ Developed by **[Shobhit Kumar Prabhakar](https://shobhit.net)**.
 
 - Automated GitHub Releases for six targets (Windows, macOS and Linux on x64 and ARM64) from a single **Run workflow** button. See [Releasing](#releasing).
 - The `Rewordly.Core` library (prompts, settings and AI provider clients) is published as a NuGet package on [GitHub Packages](#using-the-rewordlycore-package).
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![The action menu at the pointer](docs/images/action-menu.png) | ![The Rewrite in a style submenu](docs/images/menu-styles.png) |
+| Select text, press `Ctrl+C` twice: the menu opens at your pointer. | 12 main styles, 5 extra styles and your own. |
+| ![The result window with Show original](docs/images/result-show-original.png) | ![A translation into Spanish](docs/images/result-translate.png) |
+| Compare, edit, regenerate, then paste back in place. | Translate into 27 languages or any language you type. |
+| ![The Chat window](docs/images/chat-window.png) | ![The result window in the dark theme](docs/images/result-correct-dark.png) |
+| Chat about the selected text with your own instruction. | System, light and dark themes. |
+| ![Settings, AI model tab](docs/images/settings-ai-model.png) | ![Settings, Prompts tab](docs/images/settings-prompts.png) |
+| Gemini, OpenAI, OpenRouter, Groq, Ollama or any OpenAI-compatible server. | Every prompt is editable, in 6 languages. |
+
+More screenshots and step-by-step guides are in the [documentation](docs/README.md).
 
 ## Downloads
 
@@ -336,6 +355,7 @@ dotnet add package Rewordly.Core
 │   ├── ISSUE_TEMPLATE/       # Bug report and feature request templates
 │   ├── workflows/            # GitHub Actions CI and Release workflows
 │   └── pull_request_template.md
+├── docs/                     # User documentation (guides) and screenshots in docs/images/
 ├── packaging/
 │   ├── Info.plist            # macOS bundle configuration
 │   ├── install-linux.sh      # Linux user installation script

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Settings › About shows the developer, Shobhit Kumar Prabhakar, with links to shobhit.net and the GitHub repository.
+- Documentation in `docs/`: Getting started, Using Rewordly, AI providers, Settings and Troubleshooting guides with screenshots, plus a screenshot gallery in the README.
 - README: full feature list, release and download badges, and a Developer section; updated LICENSE, SECURITY, CONTRIBUTING and issue template contacts.
 
 ## [2.1.1] - 2026-11-18
