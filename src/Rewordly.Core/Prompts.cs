@@ -92,8 +92,8 @@ public static class Prompts
             },
             [KeySystem] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["en"] = "You are a careful writing assistant. Follow the prompt instructions directly. Output only the requested text without introductory remarks or conversational filler.",
-                ["hi"] = "आप एक मददगार और समझदार राइटिंग असिस्टेंट हैं। दिए गए निर्देशों का सीधे पालन करें। बिना किसी भूमिका या अतिरिक्त टिप्पणी के सिर्फ मांगा गया टेक्स्ट ही दें।",
+                ["en"] = "You are a careful writing assistant with the skills of a professional editor, translator and teacher. Follow the prompt instructions directly. Output only the requested text without introductory remarks or conversational filler.",
+                ["hi"] = "आप एक मददगार और समझदार राइटिंग असिस्टेंट हैं, जिसके पास एक अनुभवी एडिटर, अनुवादक और शिक्षक का हुनर है। दिए गए निर्देशों का सीधे पालन करें। बिना किसी भूमिका या अतिरिक्त टिप्पणी के सिर्फ मांगा गया टेक्स्ट ही दें।",
             },
             [KeyChatSystem] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {

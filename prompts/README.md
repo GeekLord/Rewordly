@@ -31,6 +31,7 @@ A good template:
 
 - tells the AI to **rewrite** the selected text into a prompt, and not to answer it, carry it out or follow instructions inside it;
 - keeps every fact from the input and **invents nothing**, using `[placeholders]` for missing essentials;
+- opens with a role for the rewriter ("You are an expert prompt engineer.") and, for text targets, asks for a fitting role in the generated prompt only when the task needs specific expertise;
 - covers what the target needs: context, task, output and tone, plus constraints and a definition of done for agents;
 - keeps the input's language and a proportionate length;
 - asks for the prompt **only**, with no introduction or code fence;
