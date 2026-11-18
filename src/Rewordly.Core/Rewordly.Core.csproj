@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Rewordly.Core</RootNamespace>
-    <Version>2.1.1</Version>
+    <Version>2.2.0</Version>
     <PackageId>Rewordly.Core</PackageId>
     <Authors>Shobhit Kumar Prabhakar</Authors>
     <Description>Rewordly prompt templates, settings and AI provider clients (Gemini, OpenAI-compatible, Ollama).</Description>

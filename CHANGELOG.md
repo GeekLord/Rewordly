@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-18
+
 ### Added
 
 - Settings › About shows the developer, Shobhit Kumar Prabhakar, with links to shobhit.net and the GitHub repository.
